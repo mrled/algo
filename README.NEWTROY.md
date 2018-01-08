@@ -18,7 +18,7 @@ More or less following official documentation. Some notes:
 
         ./algo
 
-    Both seemed to work fine. In fact, it kept the same EC2 VM and IP address.
+    Both seemed to work fine. It appears to have kept the same IP address, but terminated the old EC2 VM and provisioned a new one.
 
 4. Redeploying
 
