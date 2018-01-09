@@ -25,3 +25,15 @@ More or less following official documentation. Some notes:
     When deploying to a machine that has already been deployed to, it will re-encrypt the CA key and all client keys. However, it will not re-key the CA; the old client profiles are still valid.
 
     For this reason, there's not much point in saving the CA or client key passphrases. If you forget them, you can just regenerate them by redeploying and reconfigure the clients.
+
+5.  Encrypted configs
+
+    The `configs` directory is tar'd, gzip'd, gpg'd, and committed to the repository.
+
+    To decrypt and extract:
+
+        rm -rf configs; gpg --decrypt configs.tar.gz.gpg | gunzip | tar x
+
+    To compress and encrypt:
+
+        tar -c configs | gzip | gpg --recipient conspirator@PSYOPS --encrypt --output configs.tar.gz.gpg
