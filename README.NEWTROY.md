@@ -2,7 +2,17 @@
 
 More or less following official documentation. Some notes:
 
-1. I'm using system Python (since it has to be Python2, ugh), so all `python` commands are `/usr/bin/python`
+1. Make sure to use python2 and set it up as described in `README.md`
+
+    To use from PSYOPS, you have to use python2 and set it up more or less the way the README says to set up macOS:
+
+        python2 -m ensurepip --user
+        python2 -m pip install --user --upgrade virtualenv
+        python2 -m virtualenv env && source env/bin/activate && python -m pip install -U pip && python -m pip install -r requirements.txt
+
+    Later, as long as the `env` directory still exists, you can just do
+
+        source env/bin/activate
 
 2. Not enabling "VPN On Demand" for macOS/iOS clients for now. If enabled, it will connect to VPN automatically unless on trusted wifi, which means if my VPN server goes down I can't use wifi. (Can enable for cellular too, with the same effect over that network.)
 
