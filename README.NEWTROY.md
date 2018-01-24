@@ -22,7 +22,7 @@ More or less following official documentation. Some notes:
 
         AWS_ACCESS_KEY=whatever
         AWS_SECRET_KEY=whatever
-        ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY aws_server_name=newtroy region=us-east-2 Win10_Enabled=Y Store_CAKEY=Y"
+        ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY aws_server_name=newtroy region=us-east-2 Win10_Enabled=Y Store_CAKEY=Y"
 
     The second time, I redeployed using the `algo` script:
 
@@ -30,13 +30,38 @@ More or less following official documentation. Some notes:
 
     Both seemed to work fine. It appears to have kept the same IP address, but terminated the old EC2 VM and provisioned a new one.
 
-4. Redeploying
+    Tags:
+
+    1. `ec2`: required for AWS
+    2. `vpn`: required
+    3. `cloud`
+    4. `security`
+    5. `encrypted`: some AWS specific thing, I think it's encrypting the EBS disk but honestly what is the threat model here
+    6. `ssh_tunneling`: enable SSH tunneling, which saves a `known_hosts` file inside the `configs/` directory
+
+    Environment settings:
+
+    1. `aws_access_key`
+    2. `aws_secret_key`
+    3. `aws_server_name`: sets the `Name` tag for the EC2 instance in AWS
+    4. `region`
+    5. `Win10_Enabled`: enable support for Windows 10 clients, which apparently harms security to some degree
+    6. `Store_CAKEY`: save the CA key so that I can add more clients later
+
+4. Troubleshooting by connecting over SSH
+
+    SSH using the administrative user (not one of your VPN client users, which have SSH tunneling but no shell access) like so:
+
+        algoserver=1.2.3.4
+        ssh -o "UserKnownHostsFile=configs/$algoserver/known_hosts" -i configs/algo.pem -l ubuntu "$algoserver"
+
+5. Redeploying
 
     When deploying to a machine that has already been deployed to, it will re-encrypt the CA key and all client keys. However, it will not re-key the CA; the old client profiles are still valid.
 
     For this reason, there's not much point in saving the CA or client key passphrases. If you forget them, you can just regenerate them by redeploying and reconfigure the clients.
 
-5.  Encrypted configs
+6.  Encrypted configs
 
     The `configs` directory is tar'd, gzip'd, gpg'd, and committed to the repository.
 
