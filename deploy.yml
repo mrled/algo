@@ -22,6 +22,7 @@
           tags: always
 
   roles:
+    - { role: dns_route53, tags: ['dns_route53'] }
     - { role: cloud-digitalocean, tags: ['digitalocean'] }
     - { role: cloud-ec2, tags: ['ec2'] }
     - { role: cloud-gce, tags: ['gce'] }
