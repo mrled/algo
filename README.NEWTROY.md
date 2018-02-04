@@ -1,74 +1,136 @@
 # NEWTROY - mrled's VPN server
 
-More or less following official documentation. Some notes:
+This is a fork of the algo project, specific to me.
 
-1. Make sure to use python2 and set it up as described in `README.md`
+## Use with PSYOPS
 
-    To use from PSYOPS, you have to use python2 and set it up more or less the way the README says to set up macOS:
+Make sure to use python2 and set it up as described in `README.md`
 
-        python2 -m ensurepip --user
-        python2 -m pip install --user --upgrade virtualenv
-        python2 -m virtualenv env && source env/bin/activate && python -m pip install -U pip && python -m pip install -r requirements.txt
+To use from PSYOPS, you have to use python2 and set it up more or less the way the README says to set up macOS:
 
-    Later, as long as the `env` directory still exists, you can just do
+    python2 -m ensurepip --user
+    python2 -m pip install --user --upgrade virtualenv
+    python2 -m virtualenv env && source env/bin/activate && python -m pip install -U pip && python -m pip install -r requirements.txt
 
-        source env/bin/activate
+Later, as long as the `env` directory still exists, you can just do
 
-2. Not enabling "VPN On Demand" for macOS/iOS clients for now. If enabled, it will connect to VPN automatically unless on trusted wifi, which means if my VPN server goes down I can't use wifi. (Can enable for cellular too, with the same effect over that network.)
+    source env/bin/activate
 
-3. Deploying from Ansible vs deploying from the `algo` script
+## Differences from upstream
 
-    The first time around, I deployed from Ansible, without using the `algo` script from this repo:
+As I make my own modifications, some bits that I don't use may rot a little.
+For instance, I'm using AWS, and when I added `dns_route53`, I didn't also add `dns_gcp` or `dns_azure` along with it.
+I also am not going to maintain the `algo` script, so you should deploy from Ansible (see below).
+That said, I don't want to outright _remove_ that functionality, because it will make merging from upstream harder.
+So, it may rot. I'm ok with that.
+I will document changes and my user here, and anyone who wants to use this as a jumping-off point will have to mind the sharp edges.
 
-        AWS_ACCESS_KEY=whatever
-        AWS_SECRET_KEY=whatever
-        ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY aws_server_name=newtroy region=us-east-2 Win10_Enabled=Y Store_CAKEY=Y"
+### Misc stuff
 
-    The second time, I redeployed using the `algo` script:
+- My values are committed in `config.cfg`
+- Encrypted `configs.tar.gz.gpg` (see below)
+- Logging is added to `ansible.cfg`
 
-        ./algo
+### Resolving client hosts with dnsmasq
 
-    Both seemed to work fine. It appears to have kept the same IP address, but terminated the old EC2 VM and provisioned a new one.
+Added support for dnsmasq to resolve client hosts when `dns_adblocking` is enabled and `vpn_domain` is specified.
 
-    Tags:
+There are two components here:
 
-    1. `ec2`: required for AWS
-    2. `vpn`: required
-    3. `cloud`
-    4. `security`
-    5. `encrypted`: some AWS specific thing, I think it's encrypting the EBS disk but honestly what is the threat model here
-    6. `ssh_tunneling`: enable SSH tunneling, which saves a `known_hosts` file inside the `configs/` directory
+1. Modify `ipsec.conf` to create a separate connection for each user
+2. Add an `/etc/hosts.ipsecclients` file that dnsmasq uses as a hosts file to map IP addresses to hostnames
 
-    Environment settings:
+The first component necessitated a breaking change from upstream, where new connections that use the same certificate as an existing connection _disconnect_ the existing connection.
+This was necessary because IP addresses are now mapped to users, so there isn't a good way to allow a user to maintain multiple connections - how would the DNS server know what IP address to use?
+I don't think this is a big deal, because I create a separate Algo user (resulting in a separate certificate and private key) for each device, figuring I can revoke a device if it gets compromised without having to redistribute keys to all other devices.
 
-    1. `aws_access_key`
-    2. `aws_secret_key`
-    3. `aws_server_name`: sets the `Name` tag for the EC2 instance in AWS
-    4. `region`
-    5. `Win10_Enabled`: enable support for Windows 10 clients, which apparently harms security to some degree
-    6. `Store_CAKEY`: save the CA key so that I can add more clients later
+The first component is a bit weird, too, because apparently Strongswan sees some clients, such as another Strongswan client, as sending their id as `/CN=USER`.
+However, it sees other clients, such as macOS's IPSEC client, as sending their id as simply `USER`.
+So, I had to include *two* connection stanzas for each client - one in the former style, and one in the latter.
 
-4. Troubleshooting by connecting over SSH
+**Rough edges**:
 
-    SSH using the administrative user (not one of your VPN client users, which have SSH tunneling but no shell access) like so:
+1. Multiple connections from the same user are not supported, but because there are two stanzas per user because of the "id" problem mentioned above, if you distribute the same secret and key to different devices that send their IDs in those two different ways, networking will probably break altogether. Solution: don't do that :)
 
-        algoserver=1.2.3.4
-        ssh -o "UserKnownHostsFile=configs/$algoserver/known_hosts" -i configs/algo.pem -l ubuntu "$algoserver"
+### Resolving client hosts with Route53
 
-5. Redeploying
+Added support to update Route53 if `vpn_domain` and `vpn_hosted_zone_id` is specified.
 
-    When deploying to a machine that has already been deployed to, it will re-encrypt the CA key and all client keys. However, it will not re-key the CA; the old client profiles are still valid.
+This is much better than my previous solution (with dnsmasq, above) because it will let me use Let's Encrypt with an ACME client that supports DNS attestation.
+(Aside: I need to use DNS attestation for non-public hosts, because I cannot use HTTP attestation because, well, they're non public.)
 
-    For this reason, there's not much point in saving the CA or client key passphrases. If you forget them, you can just regenerate them by redeploying and reconfigure the clients.
+There are two components to this as well
 
-6.  Encrypted configs
+1. The same as the first component in the dnsmasq solution
+2. I added a new `dns_route53` role, controlled by a new `dns_route53` tag, that invokes the Ansible Route53 module
 
-    The `configs` directory is tar'd, gzip'd, gpg'd, and committed to the repository.
+For now, I didn't get very clever with the second component.
+It just creates the records if one of the same name doesn't exist, or updates them if it does exist.
+If the zone already has a record with the same IP address but a different name, it will not get removed.
 
-    To decrypt and extract:
+**Rough edges**
 
-        rm -rf configs; gpg --decrypt configs.tar.gz.gpg | gunzip | tar x
+1. Just like with the dnsmasq solution, you can get into trouble if you try to distribute the same user cert to multiple devices. Don't do that :)
+2. Old records are not removed, possibly leading to confusion. Solution: just fix this by hand
 
-    To compress and encrypt:
+## Deploying from Ansible
 
-        tar -c configs | gzip | gpg --recipient conspirator@PSYOPS --encrypt --output configs.tar.gz.gpg
+As I said above, I am not maintaining the `algo` script, so deployments should be done from Ansible.
+
+**Deploy from Ansible. Don't use the `algo` script.**
+
+This is how I deploy:
+
+    AWS_ACCESS_KEY=whatever
+    AWS_SECRET_KEY=whatever
+    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53 -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY aws_server_name=newtroy region=us-east-2 Win10_Enabled=Y Store_CAKEY=Y"
+
+Tags:
+
+1. `ec2`: required for AWS
+2. `vpn`: required
+3. `cloud`
+4. `security`
+5. `encrypted`: some AWS specific thing, I think it's encrypting the EBS disk but honestly what is the threat model here
+6. `ssh_tunneling`: enable SSH tunneling, which saves a `known_hosts` file inside the `configs/` directory
+6. `dns_route53`: enable route53 DNS
+
+Environment settings:
+
+1. `aws_access_key`
+2. `aws_secret_key`
+3. `aws_server_name`: sets the `Name` tag for the EC2 instance in AWS
+4. `region`
+5. `Win10_Enabled`: enable support for Windows 10 clients, which apparently harms security to some degree
+6. `Store_CAKEY`: save the CA key so that I can add more clients later
+
+## Redeployment notes
+
+It appear to keep the same (Elastic) IP address, but terminates the old EC2 VM and provisions a new one.
+
+When deploying to a machine that has already been deployed to, it will re-encrypt the CA key and all client keys. However, it will not re-key the CA; the old client profiles are still valid.
+
+For this reason, there's not much point in saving the CA or client key passphrases. If you forget them, you can just regenerate them by redeploying and reconfigure the clients.
+
+## Troubleshooting
+
+SSH using the administrative user (not one of your VPN client users, which have SSH tunneling but no shell access) like so:
+
+    algoserver=1.2.3.4
+    ssh -o "UserKnownHostsFile=configs/$algoserver/known_hosts" -i configs/algo.pem -l ubuntu "$algoserver"
+
+## Working with the encrypted configs
+
+The `configs` directory is tar'd, gzip'd, gpg'd, and committed to the repository.
+
+To decrypt and extract:
+
+    rm -rf configs; gpg --decrypt configs.tar.gz.gpg | gunzip | tar x
+
+To compress and encrypt:
+
+    tar -c configs | gzip | gpg --recipient conspirator@PSYOPS --encrypt --output configs.tar.gz.gpg
+
+## Misc
+
+1. Not enabling "VPN On Demand" for macOS/iOS clients for now. If enabled, it will connect to VPN automatically unless on trusted wifi, which means if my VPN server goes down I can't use wifi. (Can enable for cellular too, with the same effect over that network.)
