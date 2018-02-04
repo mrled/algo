@@ -3,5 +3,6 @@
 configs/*
 inventory_users
 *.kate-swp
-env
+env*
 .DS_Store
+ansible.log
