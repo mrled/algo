@@ -15,7 +15,7 @@
     ttl: 300
     value: "{{ vpn_network | ipaddr(item.0 + 1) | ipaddr('address') }}"
     command: create
-    # Waiting will take 
+    # Waiting could take 40 (or more?) seconds PER RECORD, so you might not want this
     wait: yes
 
   # when using a with_indexed_items loop:
