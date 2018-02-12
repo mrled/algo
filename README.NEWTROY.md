@@ -83,7 +83,8 @@ This is how I deploy:
 
     AWS_ACCESS_KEY=whatever
     AWS_SECRET_KEY=whatever
-    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53 -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY aws_server_name=newtroy region=us-east-2 Win10_Enabled=Y Store_CAKEY=Y"
+    CA_PASS=whatever
+    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53 -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY aws_server_name=newtroy region=us-east-2 Win10_Enabled=Y Store_CAKEY=Y easyrsa_CA_password=$CA_PASS"
 
 Tags:
 
@@ -103,6 +104,7 @@ Environment settings:
 4. `region`
 5. `Win10_Enabled`: enable support for Windows 10 clients, which apparently harms security to some degree
 6. `Store_CAKEY`: save the CA key so that I can add more clients later
+7. `easyrsa_CA_password`: if you have added a user to `config.cfg` and are redeploying, you MUST pass this with the value that Algo generated or else you'll get an error like `unable to load CA private key`. If it's your first time deploying, you can leave this blank causing Algo to generate a password for you and display it at the end.
 
 ## Redeployment notes
 
