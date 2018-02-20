@@ -8,13 +8,15 @@ Make sure to use python2 and set it up as described in `README.md`
 
 To use from PSYOPS, you have to use python2 and set it up more or less the way the README says to set up macOS:
 
+(Note: use a `env.PSYOPS` directory, instead of just `env`, in case I need to use it from the Docker host as well.)
+
     python2 -m ensurepip --user
     python2 -m pip install --user --upgrade virtualenv
-    python2 -m virtualenv env && source env/bin/activate && python -m pip install -U pip && python -m pip install -r requirements.txt
+    python2 -m virtualenv env.PSYOPS && source env.PSYOPS/bin/activate && python -m pip install -U pip && python -m pip install -r requirements.txt
 
-Later, as long as the `env` directory still exists, you can just do
+Later, as long as the `env.PSYOPS` directory still exists, you can just do
 
-    source env/bin/activate
+    source env.PSYOPS/bin/activate
 
 ## Differences from upstream
 
@@ -106,6 +108,19 @@ Environment settings:
 6. `Store_CAKEY`: save the CA key so that I can add more clients later
 7. `easyrsa_CA_password`: if you have added a user to `config.cfg` and are redeploying, you MUST pass this with the value that Algo generated or else you'll get an error like `unable to load CA private key`. If it's your first time deploying, you can leave this blank causing Algo to generate a password for you and display it at the end.
 
+Experimental settings
+
+1.  Environment: `max_mss=1316`: (EXPERIMENTAL) this is set for GCP deployments in upstream Algo by default, and can apparently resolve some MTU issues.
+
+    See also:
+     -   https://github.com/trailofbits/algo/pull/185 (which claims EC2 is not affected)
+     -   https://github.com/trailofbits/algo/issues/686 (which claims EC2 might be affected after all)
+
+    Update: Based on
+    [this](https://trailofbits.github.io/algo/troubleshooting.html#various-websites-appear-to-be-offline-through-the-vpn),
+    my guess is now that modifying MTU was not related to my problem.
+
+
 ## Redeployment notes
 
 It appear to keep the same (Elastic) IP address, but terminates the old EC2 VM and provisions a new one.
@@ -136,3 +151,15 @@ To compress and encrypt:
 ## Misc
 
 1. Not enabling "VPN On Demand" for macOS/iOS clients for now. If enabled, it will connect to VPN automatically unless on trusted wifi, which means if my VPN server goes down I can't use wifi. (Can enable for cellular too, with the same effect over that network.)
+
+## TO DO
+
+Stuff I want for me:
+
+ -  Use Ansible Vault to store secrets so I don't have to pass them as variables?
+ -  Some way to use Ansible Vault to store the whole configs/ directory ?
+
+Stuff I want for me that could go upstream:
+
+ -  Document exactly the necessary permissions Algo needs to deploy to AWS
+    (and generate an IAM account with those creds)
