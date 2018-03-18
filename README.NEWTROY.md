@@ -42,17 +42,23 @@ There are two components here:
 1. Modify `ipsec.conf` to create a separate connection for each user
 2. Add an `/etc/hosts.ipsecclients` file that dnsmasq uses as a hosts file to map IP addresses to hostnames
 
-The first component necessitated a breaking change from upstream, where new connections that use the same certificate as an existing connection _disconnect_ the existing connection.
-This was necessary because IP addresses are now mapped to users, so there isn't a good way to allow a user to maintain multiple connections - how would the DNS server know what IP address to use?
-I don't think this is a big deal, because I create a separate Algo user (resulting in a separate certificate and private key) for each device, figuring I can revoke a device if it gets compromised without having to redistribute keys to all other devices.
+The first component necessitated a breaking change from upstream,
+where new connections that use the same certificate as an existing connection _disconnect_ the existing connection.
+This was necessary because IP addresses are now mapped to users,
+so there isn't a good way to allow a user to maintain multiple connections -
+how would the DNS server know what IP address to use?
+I don't think this is a big deal,
+because I create a separate Algo user
+(resulting in a separate certificate and private key)
+for each device,
+figuring I can revoke a device if it gets compromised
+without having to redistribute keys to all other devices.
 
-The first component is a bit weird, too, because apparently Strongswan sees some clients, such as another Strongswan client, as sending their id as `/CN=USER`.
-However, it sees other clients, such as macOS's IPSEC client, as sending their id as simply `USER`.
-So, I had to include *two* connection stanzas for each client - one in the former style, and one in the latter.
-
-**Rough edges**:
-
-1. Multiple connections from the same user are not supported, but because there are two stanzas per user because of the "id" problem mentioned above, if you distribute the same secret and key to different devices that send their IDs in those two different ways, networking will probably break altogether. Solution: don't do that :)
+Also, it seems that Strongswan clients send their id as `/CN=USER`,
+but other clients like macOS and iOS send simply `USER`.
+Therefore, I made a modification to the `ipsec_$user.conf` files,
+which can be used by a Strongswan client,
+to send the ID as simply `USER`.
 
 ### Resolving client hosts with Route53
 
@@ -72,8 +78,8 @@ If the zone already has a record with the same IP address but a different name, 
 
 **Rough edges**
 
-1. Just like with the dnsmasq solution, you can get into trouble if you try to distribute the same user cert to multiple devices. Don't do that :)
-2. Old records are not removed, possibly leading to confusion. Solution: just fix this by hand
+1.  Old records are not removed, possibly leading to confusion.
+    Solution: just fix this by hand
 
 ## Deploying from Ansible
 
@@ -86,7 +92,8 @@ This is how I deploy:
     AWS_ACCESS_KEY=whatever
     AWS_SECRET_KEY=whatever
     CA_PASS=whatever
-    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53 -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY aws_server_name=newtroy region=us-east-2 Win10_Enabled=Y Store_CAKEY=Y easyrsa_CA_password=$CA_PASS"
+    CLIENT_PASS=whatever
+    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53 -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY easyrsa_CA_password=$CA_PASS p12_export_password=$CLIENT_PASS"
 
 Tags:
 
@@ -96,17 +103,14 @@ Tags:
 4. `security`
 5. `encrypted`: some AWS specific thing, I think it's encrypting the EBS disk but honestly what is the threat model here
 6. `ssh_tunneling`: enable SSH tunneling, which saves a `known_hosts` file inside the `configs/` directory
-6. `dns_route53`: enable route53 DNS
+7. `dns_route53`: enable route53 DNS
 
 Environment settings:
 
 1. `aws_access_key`
 2. `aws_secret_key`
-3. `aws_server_name`: sets the `Name` tag for the EC2 instance in AWS
-4. `region`
-5. `Win10_Enabled`: enable support for Windows 10 clients, which apparently harms security to some degree
-6. `Store_CAKEY`: save the CA key so that I can add more clients later
-7. `easyrsa_CA_password`: if you have added a user to `config.cfg` and are redeploying, you MUST pass this with the value that Algo generated or else you'll get an error like `unable to load CA private key`. If it's your first time deploying, you can leave this blank causing Algo to generate a password for you and display it at the end.
+3. `easyrsa_CA_password`: if you have added a user to `config.cfg` and are redeploying, you MUST pass this with the value that Algo generated or else you'll get an error like `unable to load CA private key`. If it's your first time deploying, you can leave this blank causing Algo to generate a password for you and display it at the end.
+4. `p12_export_password`: this is just a nice thing to pass in so my fucking client PKCS12 certificate passwords don't change every fucking time I redeploy
 
 Experimental settings
 
