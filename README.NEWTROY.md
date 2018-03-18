@@ -146,11 +146,11 @@ The `configs` directory is tar'd, gzip'd, gpg'd, and committed to the repository
 
 To decrypt and extract:
 
-    rm -rf configs; gpg --decrypt configs.tar.gz.gpg | gunzip | tar x
+    ./cryptconfig.sh decrypt
 
 To compress and encrypt:
 
-    tar -c configs | gzip | gpg --recipient conspirator@PSYOPS --encrypt --output configs.tar.gz.gpg
+    ./cryptconfig.sh encrypt
 
 ## Misc
 
