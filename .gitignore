@@ -6,3 +6,5 @@ inventory_users
 env*
 .DS_Store
 ansible.log
+.vscode
+venv*
