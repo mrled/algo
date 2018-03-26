@@ -25,7 +25,8 @@
     module: shell
       openssl rand -hex 16
   become: no
-  register: CA_password
+  register: CA_password_generated
+  when: CA_password is not defined
 
 - name: Generate p12 export password
   local_action:
@@ -38,7 +39,7 @@
 - name: Define password facts
   set_fact:
     easyrsa_p12_export_password: "{{ p12_export_password|default(p12_export_password_generated.stdout) }}"
-    easyrsa_CA_password: "{{ CA_password.stdout }}"
+    easyrsa_CA_password: "{{ CA_password|default(CA_password_generated.stdout) }}"
 
 - name: Define the commonName
   set_fact:
