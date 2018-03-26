@@ -3,6 +3,7 @@
   tags: algo
   vars_files:
     - config.cfg
+    - config.vault.cfg
 
   pre_tasks:
     - block:
@@ -51,6 +52,7 @@
   become: true
   vars_files:
     - config.cfg
+    - config.vault.cfg
 
   pre_tasks:
     - block:

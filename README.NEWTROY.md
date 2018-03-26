@@ -81,40 +81,48 @@ If the zone already has a record with the same IP address but a different name, 
 1.  Old records are not removed, possibly leading to confusion.
     Solution: just fix this by hand
 
+### Use of Ansible vault
+
+I use Ansible vault for sensitive values,
+allowing me to commit them in an encrypted form to the repository.
+I use GPG to unlock the vault.
+
+For the setup:
+
+1. Generate a vault passphrase, and save it to a GPG-encrypted file
+
+        openssl rand -hex 64 | gpg --encrypt --output .vault-passphrase.gpg --recipient 'conspirator@PSYOPS'
+
+2. Add the `.vault-pass-script` file as it exists in this repo, and make sure it is executable
+
+3. Modify the `ansible.cfg` file to include a `vault_password_file` line as is done in this repo
+
+4. Run `ansible-vault create config.vault.cfg` to create the vault the first time
+
+5. Run `ansible-vault edit config.vault.cfg` to edit it later
+
+See also: https://benincosa.com/?p=3235
+
 ## Deploying from Ansible
 
-As I said above, I am not maintaining the `algo` script, so deployments should be done from Ansible.
+As I said above, I am not maintaining the `algo` script.
 
-**Deploy from Ansible. Don't use the `algo` script.**
+However, I have created a new `newtroy` script,
+which uses Ansible to deploy with all of my defaults.
+No arguments are required!
+Simply run `./newtroy` to deploy.
 
-This is how I deploy:
+See that script for details on what it's doing.
 
-    AWS_ACCESS_KEY=whatever
-    AWS_SECRET_KEY=whatever
-    CA_PASS=whatever
-    CLIENT_PASS=whatever
-    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53 -e "aws_access_key=$AWS_ACCESS_KEY aws_secret_key=$AWS_SECRET_KEY easyrsa_CA_password=$CA_PASS p12_export_password=$CLIENT_PASS"
+Once more, for emphasis: **Don't use the `algo` script.**
 
-Tags:
+### Experimental settings
 
-1. `ec2`: required for AWS
-2. `vpn`: required
-3. `cloud`
-4. `security`
-5. `encrypted`: some AWS specific thing, I think it's encrypting the EBS disk but honestly what is the threat model here
-6. `ssh_tunneling`: enable SSH tunneling, which saves a `known_hosts` file inside the `configs/` directory
-7. `dns_route53`: enable route53 DNS
+I have run some experiments with additional settings,
+and record their results here.
+These settings are NOT saved in `config.cfg`/`newtroy`.
 
-Environment settings:
-
-1. `aws_access_key`
-2. `aws_secret_key`
-3. `easyrsa_CA_password`: if you have added a user to `config.cfg` and are redeploying, you MUST pass this with the value that Algo generated or else you'll get an error like `unable to load CA private key`. If it's your first time deploying, you can leave this blank causing Algo to generate a password for you and display it at the end.
-4. `p12_export_password`: this is just a nice thing to pass in so my fucking client PKCS12 certificate passwords don't change every fucking time I redeploy
-
-Experimental settings
-
-1.  Environment: `max_mss=1316`: (EXPERIMENTAL) this is set for GCP deployments in upstream Algo by default, and can apparently resolve some MTU issues.
+1.  Environment: `-e max_mss=1316`: (EXPERIMENTAL) this is set for GCP deployments in upstream Algo by default, and can apparently resolve some MTU issues.
 
     See also:
      -   https://github.com/trailofbits/algo/pull/185 (which claims EC2 is not affected)
