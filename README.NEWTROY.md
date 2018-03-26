@@ -103,7 +103,7 @@ For the setup:
 
 See also: https://benincosa.com/?p=3235
 
-## Deploying from Ansible
+## Deploying to production
 
 As I said above, I am not maintaining the `algo` script.
 
@@ -115,6 +115,29 @@ Simply run `./newtroy` to deploy.
 See that script for details on what it's doing.
 
 Once more, for emphasis: **Don't use the `algo` script.**
+
+## Deploying a testing environment
+
+I sometimes use DigitalOcean for testing.
+For testing deployments, we do not update Route53.
+To deploy to testing, you can use the `./newtroy` script:
+
+    ./newtroy testing
+
+See comments in the `newtroy` script for details on this deployment.
+
+I have also designed this to work with the master branch of upstream Algo directly.
+To use it, check out the upstream master branch and then copy the files from the newtroy branch:
+
+    git checkout upstream/master
+    git checkout origin/newtroy -- \
+        ansible.cfg \
+        config.cfg \
+        config.vault.cfg \
+        config.dotest.cfg \
+        config.dotest.vault.cfg \
+        vault-pass-script \
+        .vault-passphrase.gpg
 
 ### Experimental settings
 

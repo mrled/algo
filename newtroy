@@ -1,5 +1,22 @@
 #!/bin/sh
-set -eu
+set -e
+
+usage() {
+    cat <<ENDUSAGE
+$0: Deploy an Algo VPN with NEWTROY additions
+USAGE: $0 [production|testing]
+    With no arguments:  deploy production
+    "production":       deploy production
+    "testing":          deploy testing
+PRODUCTION:
+    Production is deployed to AWS
+    It uses config.cfg and config.vault.cfg for its variables
+TESTING:
+    Testing is deployed to Digital Ocean
+    It uses config.cfg/config.vault.cfg, but overrides some value from those
+    files with value from config.dotest.cfg/config.dotest.vault.cfg
+ENDUSAGE
+}
 
 # Deploy NEWTROY
 #
@@ -16,5 +33,42 @@ set -eu
 # but since this is a fork containing just my configuration,
 # I have set those values in config.cfg and config.vault.cfg
 # (See README.NEWTROY.md for more information)
+#
+production() {
+    printf "\n\n\nDEPLOYING PRODUCTION\n\n\n"
+    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
+}
 
-ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
+# Deploy NEWTROY to test environment
+#
+# Tags:
+# 1. digitalocean       required for Digital Ocean
+# 2. vpn                required for any Algo deployment
+# 3. cloud              required for non-local deployments (I think)
+#
+# Extra variables files
+# (Values in these files override values set in config.cfg/config.vault.cfg)
+# 1. config.dotest.vault.cfg        An ansible vault containing secrets for my DO test env
+# 2. config.dotest.cfg              A file containing non-secret vars for my DO test env
+#
+testing() {
+    printf "\n\n\nDEPLOYING TESTING\n\n\n"
+    ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.doteset.vault.cfg -e @config.dotest.cfg
+}
+
+case "$1" in
+    "help" | "-h" | "--help")
+        usage
+        exit
+        ;;
+    "" | "production")
+        production
+        ;;
+    "testing")
+        testing
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
