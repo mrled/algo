@@ -132,8 +132,8 @@ To use it, check out the upstream master branch and then copy the files from the
         ansible.cfg \
         config.cfg \
         config.vault.cfg \
-        config.dotest.cfg \
-        config.dotest.vault.cfg \
+        config.test.cfg \
+        config.test.vault.cfg \
         .vault-pass-script \
         .vault-passphrase.gpg \
         newtroy
