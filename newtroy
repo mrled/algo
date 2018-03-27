@@ -21,13 +21,14 @@ ENDUSAGE
 # Deploy NEWTROY
 #
 # Tags:
-# 1. ec2:               required for AWS
-# 2. vpn:               required for any Algo deployment
-# 3. cloud:             required for non-local deployments (I think?)
-# 4. security:          make additional security enhancements
-# 5. encrypted:         encrypt the AWS EBS volume
-# 6. ssh_tunneling:     enable SSH tunneling, and save configs/known_hosts
-# 7. dns_route53:       enable route53 DNS
+# - algo                required for any Algo deployment
+# - ec2:                required for AWS
+# - vpn:                required for any Algo deployment
+# - cloud:              required for non-local deployments (I think?)
+# - security:           make additional security enhancements
+# - encrypted:          encrypt the AWS EBS volume
+# - ssh_tunneling:      enable SSH tunneling, and save configs/known_hosts
+# - dns_route53:        enable route53 DNS
 #
 # Note that a typical Algo deployment passes in multiple variables with `-e` on the command line,
 # but since this is a fork containing just my configuration,
@@ -36,15 +37,16 @@ ENDUSAGE
 #
 production() {
     printf "\n\n\nDEPLOYING PRODUCTION\n\n\n"
-    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
+    ansible-playbook deploy.yml -t algo,ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
 }
 
 # Deploy NEWTROY to test environment
 #
 # Tags:
-# 1. digitalocean       required for Digital Ocean
-# 2. vpn                required for any Algo deployment
-# 3. cloud              required for non-local deployments (I think)
+# - algo                required for any Algo deployment
+# - digitalocean        required for Digital Ocean
+# - vpn                 required for any Algo deployment
+# - cloud               required for non-local deployments (I think)
 #
 # Extra variables files
 # (Values in these files override values set in config.cfg/config.vault.cfg)
@@ -53,7 +55,7 @@ production() {
 #
 testing() {
     printf "\n\n\nDEPLOYING TESTING\n\n\n"
-    ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg
+    ansible-playbook deploy.yml -t algo,digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg
 }
 
 case "$1" in
