@@ -136,8 +136,9 @@ To use it, check out the upstream master branch and then copy the files from the
         config.vault.cfg \
         config.dotest.cfg \
         config.dotest.vault.cfg \
-        vault-pass-script \
-        .vault-passphrase.gpg
+        .vault-pass-script \
+        .vault-passphrase.gpg \
+        newtroy
 
 ### Experimental settings
 
