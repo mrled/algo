@@ -18,7 +18,8 @@ TESTING:
 ENDUSAGE
 }
 
-# Deploy NEWTROY
+# Deploy to production environment
+# This is intended only to work on the newtroy fork
 #
 # Tags:
 # - algo                required for any Algo deployment
@@ -40,7 +41,8 @@ production() {
     ansible-playbook deploy.yml -t algo,ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
 }
 
-# Deploy NEWTROY to test environment
+# Deploy to test environment
+# This is intended to work on the newtroy fork, OR on upstream algo
 #
 # Tags:
 # - algo                required for any Algo deployment
@@ -50,12 +52,13 @@ production() {
 #
 # Extra variables files
 # (Values in these files override values set in config.cfg/config.vault.cfg)
-# 1. config.dotest.vault.cfg        An ansible vault containing secrets for my DO test env
-# 2. config.dotest.cfg              A file containing non-secret vars for my DO test env
+# - config.dotest.vault.cfg         An ansible vault containing secrets for my DO test env
+# - config.dotest.cfg               A file containing non-secret vars for my DO test env
+# - config.vault.cfg                We include this file explicitly so it works w/ upstream algo
 #
 testing() {
     printf "\n\n\nDEPLOYING TESTING\n\n\n"
-    ansible-playbook deploy.yml -t algo,digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg
+    ansible-playbook deploy.yml -t algo,digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg -e @config.vault.cfg
 }
 
 case "$1" in
