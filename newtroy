@@ -22,7 +22,6 @@ ENDUSAGE
 # This is intended only to work on the newtroy fork
 #
 # Tags:
-# - algo                required for any Algo deployment
 # - ec2:                required for AWS
 # - vpn:                required for any Algo deployment
 # - cloud:              required for non-local deployments (I think?)
@@ -38,14 +37,13 @@ ENDUSAGE
 #
 production() {
     printf "\n\n\nDEPLOYING PRODUCTION\n\n\n"
-    ansible-playbook deploy.yml -t algo,ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
+    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
 }
 
 # Deploy to test environment
 # This is intended to work on the newtroy fork, OR on upstream algo
 #
 # Tags:
-# - algo                required for any Algo deployment
 # - digitalocean        required for Digital Ocean
 # - vpn                 required for any Algo deployment
 # - cloud               required for non-local deployments (I think)
@@ -58,7 +56,7 @@ production() {
 #
 testing() {
     printf "\n\n\nDEPLOYING TESTING\n\n\n"
-    ansible-playbook deploy.yml -t algo,digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg -e @config.vault.cfg
+    ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg -e @config.vault.cfg
 }
 
 case "$1" in
