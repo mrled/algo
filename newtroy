@@ -53,7 +53,7 @@ production() {
 #
 testing() {
     printf "\n\n\nDEPLOYING TESTING\n\n\n"
-    ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.doteset.vault.cfg -e @config.dotest.cfg
+    ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg
 }
 
 case "$1" in
