@@ -65,16 +65,27 @@ TESTING:
 ENDUSAGE
 }
 
+ensurevenv() {
+    if type -p ansible-playbook | grep '/usr.*/bin/ansible-playbook' >/dev/null; then
+        echo "It appears you are not running from a virtual environment"
+        echo "Please do e.g. '. venv/bin/activate' and rerun this script"
+        echo "If that doesn't make sense, please read README.md and README.NEWTROY.md"
+        exit 1
+    fi
+}
+
 case "$1" in
     "help" | "-h" | "--help")
         usage
         exit
         ;;
     "production")
+        ensurevenv
         printf "\n\n\nDEPLOYING PRODUCTION\n\n\n"
         $prod_deploy
         ;;
     "testing")
+        ensurevenv
         printf "\n\n\nDEPLOYING TESTING\n\n\n"
         $test_deploy
         ;;
