@@ -2,7 +2,7 @@
 set -e
 
 prod_deploy="ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53"
-test_deploy="ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg -e @config.vault.cfg"
+test_deploy="ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling -e @config.vault.cfg -e @config.test.vault.cfg -e @config.test.cfg"
 
 usage() {
     cat <<ENDUSAGE
@@ -31,15 +31,15 @@ PRODUCTION:
     - ssh_tunneling:      enable SSH tunneling, and save configs/known_hosts
     - dns_route53:        enable route53 DNS
 
-    Note that a typical Algo deployment passes in multiple variables with `-e`
+    Note that a typical Algo deployment passes in multiple variables with '-e'
     on the command line, but since this is a fork containing just my
     configuration, I have set those values in config.cfg and config.vault.cfg
     (See README.NEWTROY.md for more information)
 
 TESTING:
-    Testing is deployed to Digital Ocean
+    Testing is deployed to AWS
     It uses config.cfg/config.vault.cfg, but overrides some value from those
-    files with value from config.dotest.cfg/config.dotest.vault.cfg
+    files with value from config.test.cfg/config.test.vault.cfg
 
     It is intended to work on the newtroy fork, OR on upstream algo
 
@@ -48,15 +48,19 @@ TESTING:
         $test_deploy
 
     Tags:
-    - digitalocean        required for Digital Ocean
-    - vpn                 required for any Algo deployment
-    - cloud               required for non-local deployments (I think)
+    - ec2:                required for AWS
+    - vpn:                required for any Algo deployment
+    - cloud:              required for non-local deployments (I think?)
+    - security:           make additional security enhancements
+    - encrypted:          encrypt the AWS EBS volume
+    - ssh_tunneling:      enable SSH tunneling, and save configs/known_hosts
 
     Extra variables files
-    (Values in these files override values set in config.cfg/config.vault.cfg)
-    - config.dotest.vault.cfg         An ansible vault containing secrets for my DO test env
-    - config.dotest.cfg               A file containing non-secret vars for my DO test env
-    - config.vault.cfg                We include this file explicitly so it works w/ upstream algo
+    (Values in these files override values set in config.cfg)
+    - config.vault.cfg              We include this file explicitly so it works w/ upstream algo
+                                    (Must be specified first so the others can override it)
+    - config.test.vault.cfg         An ansible vault containing secrets for my test env
+    - config.test.cfg               A file containing non-secret vars for my test env
 
 ENDUSAGE
 }
