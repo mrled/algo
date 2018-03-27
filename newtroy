@@ -1,62 +1,64 @@
 #!/bin/sh
 set -e
 
+prod_deploy="ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53"
+test_deploy="ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg -e @config.vault.cfg"
+
 usage() {
     cat <<ENDUSAGE
 $0: Deploy an Algo VPN with NEWTROY additions
-USAGE: $0 [production|testing]
-    With no arguments:  deploy production
-    "production":       deploy production
-    "testing":          deploy testing
+USAGE: $0 [help|production|testing]
+    help:           show help message
+    production:     deploy production
+    testing:        deploy testing
+
 PRODUCTION:
     Production is deployed to AWS
     It uses config.cfg and config.vault.cfg for its variables
+
+    It is only intended to work on the newtroy fork
+
+    It calls ansible like this:
+
+        $prod_deploy
+
+    Tags:
+    - ec2:                required for AWS
+    - vpn:                required for any Algo deployment
+    - cloud:              required for non-local deployments (I think?)
+    - security:           make additional security enhancements
+    - encrypted:          encrypt the AWS EBS volume
+    - ssh_tunneling:      enable SSH tunneling, and save configs/known_hosts
+    - dns_route53:        enable route53 DNS
+
+    Note that a typical Algo deployment passes in multiple variables with `-e`
+    on the command line, but since this is a fork containing just my
+    configuration, I have set those values in config.cfg and config.vault.cfg
+    (See README.NEWTROY.md for more information)
+
 TESTING:
     Testing is deployed to Digital Ocean
     It uses config.cfg/config.vault.cfg, but overrides some value from those
     files with value from config.dotest.cfg/config.dotest.vault.cfg
+
+    It is intended to work on the newtroy fork, OR on upstream algo
+
+    It calls ansible like this:
+
+        $test_deploy
+
+    Tags:
+    - digitalocean        required for Digital Ocean
+    - vpn                 required for any Algo deployment
+    - cloud               required for non-local deployments (I think)
+
+    Extra variables files
+    (Values in these files override values set in config.cfg/config.vault.cfg)
+    - config.dotest.vault.cfg         An ansible vault containing secrets for my DO test env
+    - config.dotest.cfg               A file containing non-secret vars for my DO test env
+    - config.vault.cfg                We include this file explicitly so it works w/ upstream algo
+
 ENDUSAGE
-}
-
-# Deploy to production environment
-# This is intended only to work on the newtroy fork
-#
-# Tags:
-# - ec2:                required for AWS
-# - vpn:                required for any Algo deployment
-# - cloud:              required for non-local deployments (I think?)
-# - security:           make additional security enhancements
-# - encrypted:          encrypt the AWS EBS volume
-# - ssh_tunneling:      enable SSH tunneling, and save configs/known_hosts
-# - dns_route53:        enable route53 DNS
-#
-# Note that a typical Algo deployment passes in multiple variables with `-e` on the command line,
-# but since this is a fork containing just my configuration,
-# I have set those values in config.cfg and config.vault.cfg
-# (See README.NEWTROY.md for more information)
-#
-production() {
-    printf "\n\n\nDEPLOYING PRODUCTION\n\n\n"
-    ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53
-}
-
-# Deploy to test environment
-# This is intended to work on the newtroy fork, OR on upstream algo
-#
-# Tags:
-# - digitalocean        required for Digital Ocean
-# - vpn                 required for any Algo deployment
-# - cloud               required for non-local deployments (I think)
-#
-# Extra variables files
-# (Values in these files override values set in config.cfg/config.vault.cfg)
-# - config.dotest.vault.cfg         An ansible vault containing secrets for my DO test env
-# - config.dotest.cfg               A file containing non-secret vars for my DO test env
-# - config.vault.cfg                We include this file explicitly so it works w/ upstream algo
-#
-testing() {
-    printf "\n\n\nDEPLOYING TESTING\n\n\n"
-    ansible-playbook deploy.yml -t digitalocean,vpn,cloud -e @config.dotest.vault.cfg -e @config.dotest.cfg -e @config.vault.cfg
 }
 
 case "$1" in
@@ -64,11 +66,13 @@ case "$1" in
         usage
         exit
         ;;
-    "" | "production")
-        production
+    "production")
+        printf "\n\n\nDEPLOYING PRODUCTION\n\n\n"
+        $prod_deploy
         ;;
     "testing")
-        testing
+        printf "\n\n\nDEPLOYING TESTING\n\n\n"
+        $test_deploy
         ;;
     *)
         usage

@@ -110,9 +110,9 @@ As I said above, I am not maintaining the `algo` script.
 However, I have created a new `newtroy` script,
 which uses Ansible to deploy with all of my defaults.
 No arguments are required!
-Simply run `./newtroy` to deploy.
+Simply run `./newtroy production` to deploy.
 
-See that script for details on what it's doing.
+See that script's help for details on what it's doing.
 
 Once more, for emphasis: **Don't use the `algo` script.**
 
@@ -120,11 +120,9 @@ Once more, for emphasis: **Don't use the `algo` script.**
 
 I sometimes use DigitalOcean for testing.
 For testing deployments, we do not update Route53.
-To deploy to testing, you can use the `./newtroy` script:
+To deploy to testing, you can run `./newtroy testing`.
 
-    ./newtroy testing
-
-See comments in the `newtroy` script for details on this deployment.
+See help in the `newtroy` script for details on this deployment.
 
 I have also designed this to work with the master branch of upstream Algo directly.
 To use it, check out the upstream master branch and then copy the files from the newtroy branch:
