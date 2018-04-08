@@ -2,7 +2,7 @@
 set -e
 
 prod_deploy="ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns_route53"
-test_deploy="ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling -e @config.vault.cfg -e @config.test.vault.cfg -e @config.test.cfg"
+test_deploy="ansible-playbook deploy.yml -t ec2,vpn,cloud,security,encrypted,ssh_tunneling,dns,adblock -e @config.vault.cfg -e @config.test.vault.cfg -e @config.test.cfg"
 
 usage() {
     cat <<ENDUSAGE
