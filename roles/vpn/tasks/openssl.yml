@@ -90,18 +90,18 @@
     shell: >
       {{ openssl_bin }} req -utf8 -new
       -newkey {{ algo_params | default('ec:ecparams/prime256v1.pem') }}
-      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ item }}"))
+      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ item }}.{{ vpn_domain }}"))
       -keyout private/{{ item }}.key
       -out reqs/{{ item }}.req -nodes
       -passin pass:"{{ easyrsa_CA_password }}"
-      -subj "/CN={{ item }}" -batch &&
+      -subj "/CN={{ item }}.{{ vpn_domain }}" -batch &&
       {{ openssl_bin }} ca -utf8
       -in reqs/{{ item }}.req
       -out certs/{{ item }}.crt
-      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ item }}"))
+      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ item }}.{{ vpn_domain }}"))
       -days 3650 -batch
       -passin pass:"{{ easyrsa_CA_password }}"
-      -subj "/CN={{ item }}" &&
+      -subj "/CN={{ item }}.{{ vpn_domain }}" &&
       touch certs/{{ item }}_crt_generated
     args:
       chdir: "configs/{{ IP_subject_alt_name }}/pki/"
@@ -142,20 +142,20 @@
       chdir: "configs/{{ IP_subject_alt_name }}/pki/"
     register: valid_certs
 
-  - name: Revoke non-existing users
-    shell: >
-      {{ openssl_bin }} ca -gencrl
-      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ item }}"))
-      -passin pass:"{{ easyrsa_CA_password }}"
-      -revoke certs/{{ item }}.crt
-      -out crl/{{ item }}.crt
-    register: gencrl
-    args:
-      chdir: configs/{{ IP_subject_alt_name }}/pki/
-      creates: crl/{{ item }}.crt
-      executable: bash
-    when: item not in users
-    with_items: "{{ valid_certs.stdout_lines }}"
+  # - name: Revoke non-existing users
+  #   shell: >
+  #     {{ openssl_bin }} ca -gencrl
+  #     -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ item }}"))
+  #     -passin pass:"{{ easyrsa_CA_password }}"
+  #     -revoke certs/{{ item }}.crt
+  #     -out crl/{{ item }}.crt
+  #   register: gencrl
+  #   args:
+  #     chdir: configs/{{ IP_subject_alt_name }}/pki/
+  #     creates: crl/{{ item }}.crt
+  #     executable: bash
+  #   when: item not in users
+  #   with_items: "{{ valid_certs.stdout_lines }}"
 
   - name: Genereate new CRL file
     shell: >

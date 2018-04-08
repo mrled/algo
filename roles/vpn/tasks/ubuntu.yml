@@ -9,6 +9,12 @@
     state: latest
     update_cache: yes
     install_recommends: yes
+- name: Ubuntu | Install strongSwan
+  apt:
+    name: strongswan-plugin-dhcp
+    state: latest
+    update_cache: yes
+    install_recommends: yes
 
 - name: Ubuntu | Enforcing ipsec with apparmor
   shell: aa-enforce "{{ item }}"

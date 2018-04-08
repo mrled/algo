@@ -8,6 +8,11 @@ charon {
 	load_modular = yes
 	plugins {
 		include strongswan.d/charon/*.conf
+		dhcp {
+			force_server_address = yes
+			server = {{ local_service_ip }}
+			identity_lease = yes
+		}
 	}
 	user = strongswan
 	group = strongswan

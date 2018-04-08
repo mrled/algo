@@ -10,3 +10,4 @@ jinja2==2.8
 netaddr
 shade
 pycrypto
+asn1crypto

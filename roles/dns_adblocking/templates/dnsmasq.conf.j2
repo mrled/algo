@@ -4,6 +4,13 @@
 # as the long options legal on the command line. See
 # "/usr/sbin/dnsmasq --help" or "man 8 dnsmasq" for details.
 
+#dhcp-range={{ vpn_network | ipaddr(50) | ipaddr('address') }}
+dhcp-range={{ vpn_network | ipaddr(vpn_network_dhcp_min) | ipaddr('address') }},{{ vpn_network | ipaddr(vpn_network_dhcp_max) | ipaddr('address') }},12h
+
+{% for user in users %}
+dhcp-host=id:{{ "{}.{}".format(user, vpn_network) | x509_common_name_hex }},{{ vpn_network | ipaddr(loop.index + vpn_network_dhcp_min) | ipaddr('address') }},{{ user }}.{{ vpn_domain }}
+{% endfor %}
+
 # Listen on this specific port instead of the standard DNS port
 # (53). Setting this to zero completely disables DNS function,
 # leaving only DHCP and/or TFTP.
@@ -111,7 +118,9 @@ group=nogroup
 #except-interface=
 # Or which to listen on by address (remember to include 127.0.0.1 if
 # you use this.)
-listen-address=127.0.0.1,FCAA::1,{{ local_service_ip }}
+listen-address=127.0.0.1
+listen-address=FCAA::1
+listen-address={{ local_service_ip }}
 # If you want dnsmasq to provide only DNS service on an interface,
 # configure it as shown above, and then use the following line to
 # disable DHCP and TFTP on it.

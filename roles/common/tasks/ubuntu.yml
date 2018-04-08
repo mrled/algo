@@ -64,6 +64,10 @@
   tags:
     - always
 
+# TODO:
+# This results in the following in /etc/network/interfaces
+#   source /etc/network/interfaces.d/*.cfg
+#   source /etc/network/interfaces.d/10-loopback-services.cfg
 - name: Loopback included into the network config
   lineinfile: dest=/etc/network/interfaces line='source /etc/network/interfaces.d/10-loopback-services.cfg' state=present
   notify:

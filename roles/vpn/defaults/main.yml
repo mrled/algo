@@ -2,6 +2,7 @@
 openssl_bin: openssl
 strongswan_enabled_plugins:
   - aes
+  - dhcp
   - gcm
   - hmac
   - kernel-netlink
