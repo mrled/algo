@@ -190,10 +190,25 @@ To compress and encrypt:
 
 Stuff I want for me:
 
- -  Use Ansible Vault to store secrets so I don't have to pass them as variables?
  -  Some way to use Ansible Vault to store the whole configs/ directory ?
 
 Stuff I want for me that could go upstream:
 
  -  Document exactly the necessary permissions Algo needs to deploy to AWS
     (and generate an IAM account with those creds)
+
+ -  Generate SSH host key client-side.
+    Not possible to securely upload it,
+    but could reduce attack surface by requiring that a MITM actively intercept the first SSH connection
+    and then maintain that active intercept for all subsequent connections
+
+ -  Support a domain name for the VPN endpoint.
+    Lots of people ask for this mostly for aesthetic reasons.
+    However, I want it so that I can tear down my infrastructure and redeploy with the same server cert.
+    (See next item.)
+
+ -  Support deploying generated PKI to brand new VMs.
+    Currently, if you tear down your Algo server,
+    you have to delete `configs/*`, redeploy, regenerate keys, and redistribute them to your clients.
+    Would be very useful if I could keep my configuration (the PKI)
+    even as I tear down my infrastructure (the VMs).
