@@ -7,8 +7,18 @@
 #dhcp-range={{ vpn_network | ipaddr(50) | ipaddr('address') }}
 dhcp-range={{ vpn_network | ipaddr(vpn_network_dhcp_min) | ipaddr('address') }},{{ vpn_network | ipaddr(vpn_network_dhcp_max) | ipaddr('address') }},12h
 
+# Each user gets two dhcp-host entries, to handle different clients who pass
+# their identity to strongSwan in different ways
+# The first entry is for clients like macOS and iOS which pass the common name
+# as a string
+# The second entry is for clients like Windows and (by default) strongSwan
+# which pass in the common name as a DER-encoded X.509 Common Name
+
 {% for user in users %}
-dhcp-host=id:{{ "{}.{}".format(user, vpn_network) | x509_common_name_hex }},{{ vpn_network | ipaddr(loop.index + vpn_network_dhcp_min) | ipaddr('address') }},{{ user }}.{{ vpn_domain }}
+# Algo user {{ user }}
+dhcp-host=id:{{ user }}.{{ vpn_domain }},{{ vpn_network | ipaddr(loop.index + vpn_network_dhcp_min) | ipaddr('address') }},{{ user }}.{{ vpn_domain }}
+dhcp-host=id:{{ "{}.{}".format(user, vpn_domain) | x509_common_name_hex }},{{ vpn_network | ipaddr(loop.index + vpn_network_dhcp_min) | ipaddr('address') }},{{ user }}.{{ vpn_domain }}
+
 {% endfor %}
 
 # Listen on this specific port instead of the standard DNS port
