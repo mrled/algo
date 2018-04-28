@@ -192,6 +192,11 @@ Stuff I want for me:
 
  -  Some way to use Ansible Vault to store the whole configs/ directory ?
 
+Stuff I have that I could consider PRing:
+
+ -  Allow the `CA_password` to be passed in from the vault
+    (see `playbooks/facts/main.yml`).
+
 Stuff I want for me that could go upstream:
 
  -  Document exactly the necessary permissions Algo needs to deploy to AWS
