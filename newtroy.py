@@ -306,7 +306,6 @@ def predeploy_prep_configs(encrypted, decrypted):
             raise MismatchedConfigsError(msg, configdiff)
 
 
-# TODO: handle absolute path better?
 def deploy(environment):
     """Deploy Algo
     """
