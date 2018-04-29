@@ -375,16 +375,20 @@ def main(*args, **kwargs):  # pylint: disable=W0613
     parser.add_argument(
         '--debug', '-d', action='store_true', help='Enable debugging')
     parser.add_argument(
-        '--configs-path', default=resolvepath('configs'), type=resolvepath,
+        '--configs-path', '-c',
+        default=resolvepath('configs'), type=resolvepath,
         help='The path to the Algo configs directory')
     parser.add_argument(
-        '--encrypted-configs', default=resolvepath('configs.tar.gz.gpg'), type=resolvepath,
+        '--encrypted-configs', '-e',
+        default=resolvepath('configs.tar.gz.gpg'), type=resolvepath,
         help='The path to the encrypted configs tarball')
     parser.add_argument(
-        '--encryption-recipient', default="conspirator@PSYOPS",
+        '--encryption-recipient', '-r',
+        default="conspirator@PSYOPS",
         help='The recipient for GPG encryption. You probably do not want to change this.')
     parser.add_argument(
-        '--venv-path', default=resolvepath('env.PSYOPS'), type=resolvepath,
+        '--venv-path', '-v',
+        default=resolvepath('env.PSYOPS'), type=resolvepath,
         help=(
             'The location of the virtual environment. '
             'Used regardless of whether it is activated in your shell. '
@@ -407,7 +411,8 @@ def main(*args, **kwargs):  # pylint: disable=W0613
             'DECRYPT: Decrypt the encrypted config archive; '
             'GITDIFF: Diff the encrypted config contents on disk vs committed to git'))
     sub_config.add_argument(
-        "--force", action='store_true', default=False,
+        "--force", '-f',
+        action='store_true', default=False,
         help='Overwrite the output if it exists')
 
     parsed = parser.parse_args()
