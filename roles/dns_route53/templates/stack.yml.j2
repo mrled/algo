@@ -11,19 +11,19 @@ Description: {{ route53_stack_name }} VPN records
 # 2.    Note the trailing dots
 #       Route53 requires trailing dots for hostnames
 
-Resources:
+Parameters:
 
-  NewtroyZone:
-    Type: AWS::Route53::HostedZone
-    Properties:
-      # Note trailing dot
-      Name: {{ vpn_domain }}.
+  NewTroyZone:
+    Type: String
+    Description: The ID for the zone to add these records to
+
+Resources:
 
   NewtroyZoneRecords:
     Type: AWS::Route53::RecordSetGroup
 
     Properties:
-      HostedZoneId: !Ref NewtroyZone
+      HostedZoneId: !Ref NewTroyZone
       RecordSets:
 
         - Name: {{ newtroy_vpn_server_hostname }}.{{ vpn_domain }}.

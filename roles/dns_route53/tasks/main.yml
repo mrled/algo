@@ -1,22 +1,32 @@
 ---
 
-- name: Generate the Route53 CloudFormation template
-  template:
-    src: stack.yml.j2
-    dest: "configs/{{ route53_stack_name }}.yml"
+- block:
 
-- name: Deploy the Route53 CloudFormation template
-  cloudformation:
-    aws_access_key: "{{ aws_access_key | default(lookup('env','AWS_ACCESS_KEY_ID'), true)}}"
-    aws_secret_key: "{{ aws_secret_key | default(lookup('env','AWS_SECRET_ACCESS_KEY'), true)}}"
-    stack_name: "{{ route53_stack_name }}"
-    state: "present"
-    region: "{{ region }}"
-    template: "configs/{{ route53_stack_name }}.yml"
-    tags:
-      Environment: Algo
-  register: stack
+  - name: Generate temporary Route53 CloudFormation template
+    template:
+      src: stack.yml.j2
+      dest: "configs/{{ route53_stack_name }}.yml"
 
-  when:
-  - vpn_domain is defined
-  - vpn_hosted_zone_id is defined
+  - name: Deploy the Route53 CloudFormation template
+    cloudformation:
+      aws_access_key: "{{ aws_access_key | default(lookup('env','AWS_ACCESS_KEY_ID'), true)}}"
+      aws_secret_key: "{{ aws_secret_key | default(lookup('env','AWS_SECRET_ACCESS_KEY'), true)}}"
+      stack_name: "{{ route53_stack_name }}"
+      state: "present"
+      region: "{{ region }}"
+      template: "configs/{{ route53_stack_name }}.yml"
+      template_parameters:
+        NewTroyZone: "{{ vpn_hosted_zone_id }}"
+      tags:
+        Environment: Algo
+    register: stack
+
+    when:
+    - vpn_domain is defined
+    - vpn_hosted_zone_id is defined
+
+  always:
+    - name: Remove temporary Route53 CloudFormation template
+      file:
+        path: "configs/{{ route53_stack_name }}.yml"
+        state: absent
