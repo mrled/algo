@@ -197,6 +197,8 @@ Stuff I have that I could consider PRing:
  -  Allow the `CA_password` to be passed in from the vault
     (see `playbooks/facts/main.yml`).
 
+ -  Rename the misspelled `ipec` file(s)
+
 Stuff I want for me that could go upstream:
 
  -  Document exactly the necessary permissions Algo needs to deploy to AWS
