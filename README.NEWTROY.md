@@ -170,13 +170,17 @@ SSH using the administrative user (not one of your VPN client users, which have 
 
 The `configs` directory is tar'd, gzip'd, gpg'd, and committed to the repository.
 
-To decrypt and extract:
+Common commands:
 
-    ./cryptconfig.sh decrypt
+    # Encrypt/decrypt
+    ./cryptconfig encrypt
+    ./cryptconfig decrypt
 
-To compress and encrypt:
+    # Test whether the contents of the configs/ dir match the contents of the encrypted configs archive
+    ./cryptconfig test
 
-    ./cryptconfig.sh encrypt
+    # Show detailed help
+    ./cryptconfig -h
 
 ## Misc
 
