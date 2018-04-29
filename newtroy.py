@@ -87,7 +87,9 @@ def pipe(arg_kwarg_list):
         first = False
 
         process = subprocess.Popen(command, **kwargs)
-        stdout, _ = process.communicate(input=stdin)
+        stdout, stderr = process.communicate(input=stdin)
+        if stderr is not None:
+            LOGGER.debug("STDERR from '{}': {}".format(" ".join(command), stderr.decode()))
 
         if process.returncode != 0:
             raise subprocess.CalledProcessError(process.returncode, command)
@@ -155,7 +157,7 @@ def decrypt_configs(encrypted, decrypted, overwrite=False):
                         This almost ends with '/configs'
     overwrite           If true, allow extraction even if decrypted_dirname contains files
     """
-    decrypted_parent, decrypted_dirname = os.path.split(decrypted)
+    decrypted_parent, _ = os.path.split(decrypted)
     bettermkdir(decrypted_parent)
     if not test_empty_config(decrypted) and not overwrite:
         raise Exception("Decrypted directory '{}' is not empty".format(decrypted))
@@ -183,24 +185,97 @@ def test_empty_config(configdir):
     return True
 
 
-def get_config_diff(encrypted, decrypted):
+def get_config_diff(
+        encrypted,
+        decrypted,
+        encrypted_path_replace=None,
+        decrypted_path_replace=None):
     """Test whether configs are equal
 
     If the configs match, return False; if not, return the result of the diff command.
+
+    encrypted               The path to the encrypted config archive
+    decrypted               The path to the decrypted config directory
+    encrypted_path_replace  The text to display in lieu of the actual temp directory
+                            where the encrypted config archive was extracted
+                            Defaults to /path/to/encrypted.gpg##/
+    decrypted_path_replace  The text to display in lieu of the actual decrypted configs path
+                            Defaults to the actual path
     """
+    decrypted_parent = os.path.basename(decrypted)
+    if encrypted_path_replace is None:
+        encrypted_path_replace = "{}##/".format(encrypted)
+    if decrypted_path_replace is None:
+        decrypted_path_replace = decrypted_parent
+
     tempdir = tempfile.mkdtemp()
     try:
-        temp_decrypted = '{}/{}'.format(tempdir, os.path.basename(decrypted))
+        LOGGER.debug("Using tempdir in get_config_diff() at {}".format(tempdir))
+        temp_decrypted = '{}/{}'.format(tempdir, decrypted_parent)
         decrypt_configs(encrypted, temp_decrypted)
-        diffproc = subprocess.Popen(
-            ['diff', '-r', decrypted, temp_decrypted],
-            stdout=subprocess.PIPE)
+        command = ['diff', '-r', decrypted, temp_decrypted]
+        diffproc = subprocess.Popen(command, stdout=subprocess.PIPE)
         diffout, differr = diffproc.communicate()
+        if differr is not None:
+            LOGGER.debug("STDERR from '{}': {}".format(" ".join(command), differr.encode()))
+
+        diffout = diffout.decode()
+        diffout = diffout.replace(temp_decrypted, encrypted_path_replace)
+        diffout = diffout.replace(decrypted, decrypted_path_replace)
+
         if diffproc.returncode != 0:
             return diffout
         return False
     finally:
         shutil.rmtree(tempdir)
+
+
+def config_git_diff(encrypted, configspath):
+    """Show a 'git diff' on the encrypted config file
+
+    encrypted       The path to the encrypted configs archive
+                    Must not have been moved with e.g. 'git mv' without being committed
+    configspath     The path to the decrypted configs dir
+                    Used solely for its basename, to know what should extract
+    """
+
+    encrypted_git_subpath = encrypted.replace(SCRIPTDIR, '')
+    while encrypted_git_subpath.startswith('/'):
+        encrypted_git_subpath = encrypted_git_subpath[1:]
+
+    # Get the contents of the committed encrypted configs file
+    command = ['git', 'show', 'HEAD:{}'.format(encrypted_git_subpath)]
+    gitproc = subprocess.Popen(command, stdout=subprocess.PIPE, cwd=SCRIPTDIR)        
+    gitout, giterr = gitproc.communicate()
+    if giterr is not None:
+        LOGGER.debug("STDERR from '{}': {}".format(" ".join(command), giterr.encode()))
+    if gitproc.returncode != 0:
+        raise Exception("Git exited with code {}".format(gitproc.returncode))
+
+    committed_config_tempdir = tempfile.mkdtemp()
+    try:
+        committed_config_encrypted_path = os.path.join(committed_config_tempdir, 'tmp.gpg')
+        LOGGER.debug(
+            "Using tempdir in config_git_diff() at {}".format(committed_config_encrypted_path))
+        with open(committed_config_encrypted_path, 'wb') as encf:
+            encf.write(gitout)
+
+        committed_config_decrypted_tempdir = tempfile.mkdtemp()
+        try:
+            temp_decrypted = '{}/{}'.format(committed_config_decrypted_tempdir, os.path.basename(configspath))
+            decrypt_configs(committed_config_encrypted_path, temp_decrypted)
+            configdiff = get_config_diff(
+                encrypted, temp_decrypted,
+                encrypted_path_replace="   SAVED TO DISK",
+                decrypted_path_replace="COMMITTED TO GIT")
+
+        finally:
+            shutil.rmtree(committed_config_decrypted_tempdir)
+
+
+    finally:
+        shutil.rmtree(committed_config_tempdir)
+    return configdiff
 
 
 def predeploy_prep_configs(encrypted, decrypted):
@@ -300,16 +375,16 @@ def main(*args, **kwargs):  # pylint: disable=W0613
     parser.add_argument(
         '--debug', '-d', action='store_true', help='Enable debugging')
     parser.add_argument(
-        '--configs-path', default=resolvepath('configs'),
+        '--configs-path', default=resolvepath('configs'), type=resolvepath,
         help='The path to the Algo configs directory')
     parser.add_argument(
-        '--encrypted-configs', default=resolvepath('configs.tar.gz.gpg'),
+        '--encrypted-configs', default=resolvepath('configs.tar.gz.gpg'), type=resolvepath,
         help='The path to the encrypted configs tarball')
     parser.add_argument(
         '--encryption-recipient', default="conspirator@PSYOPS",
         help='The recipient for GPG encryption. You probably do not want to change this.')
     parser.add_argument(
-        '--venv-path', default=resolvepath('env.PSYOPS'),
+        '--venv-path', default=resolvepath('env.PSYOPS'), type=resolvepath,
         help=(
             'The location of the virtual environment. '
             'Used regardless of whether it is activated in your shell. '
@@ -317,19 +392,23 @@ def main(*args, **kwargs):  # pylint: disable=W0613
     
     subparsers = parser.add_subparsers(dest='action')
 
-    subparsers.add_parser('production', help='Deploy production')
+    sub_deploy = subparsers.add_parser('deploy', help="Deploy Algo")
+    sub_deploy.add_argument(
+        'environment',
+        choices=['production', 'testing'],
+        help='The name of the environment to deploy')
 
-    subparsers.add_parser('testing', help='Deploy testing')
-
-    sub_encrypt = subparsers.add_parser('encrypt', help='Compress the configs directory to an encrypted file')
-    sub_encrypt.add_argument(
+    sub_config = subparsers.add_parser('config', help='Work with the encrypted configuration')
+    sub_config.add_argument(
+        'configaction',
+        choices=['encrypt', 'decrypt', 'gitdiff'],
+        help=(
+            'ENCRYPT: Encrypt the decrypted config directory; '
+            'DECRYPT: Decrypt the encrypted config archive; '
+            'GITDIFF: Diff the encrypted config contents on disk vs committed to git'))
+    sub_config.add_argument(
         "--force", action='store_true', default=False,
-        help='Overwrite an existing encrypted configs archive')
-
-    sub_decrypt = subparsers.add_parser('decrypt', help='Decompress the encrypted configs file')
-    sub_decrypt.add_argument(
-        "--force", action='store_true', default=False,
-        help='Overwrite an existing nonempty configs directory')
+        help='Overwrite the output if it exists')
 
     parsed = parser.parse_args()
 
@@ -340,30 +419,45 @@ def main(*args, **kwargs):  # pylint: disable=W0613
     activate_venv(parsed.venv_path)
 
     try:
-        if parsed.action == 'production' or parsed.action == 'testing':
+        if parsed.action == 'deploy':
             predeploy_prep_configs(parsed.encrypted_configs, parsed.configs_path)
-            deploy(parsed.action)
+            deploy(parsed.environment)
             encrypt_configs(
                 parsed.encrypted_configs,
                 parsed.configs_path,
                 parsed.encryption_recipient,
                 overwrite=True)
-        elif parsed.action == 'encrypt':
-            encrypt_configs(
-                parsed.encrypted_configs,
-                parsed.configs_path,
-                parsed.encryption_recipient,
-                overwrite=parsed.force)
-        elif parsed.action == 'decrypt':
-            result = decrypt_configs(
-                parsed.encrypted_configs,
-                parsed.configs_path,
-                overwrite=parsed.force)
-            print("Extracted the encrypted configs archive to {}".format(result))
+        elif parsed.action == 'config':
+            if parsed.configaction == 'encrypt':
+                encrypt_configs(
+                    parsed.encrypted_configs,
+                    parsed.configs_path,
+                    parsed.encryption_recipient,
+                    overwrite=parsed.force)
+            elif parsed.configaction == 'decrypt':
+                result = decrypt_configs(
+                    parsed.encrypted_configs,
+                    parsed.configs_path,
+                    overwrite=parsed.force)
+                print("Extracted the encrypted configs archive to {}".format(result))
+            elif parsed.configaction == 'gitdiff':
+                result = config_git_diff(parsed.encrypted_configs, parsed.configs_path)
+                print(
+                    "\n\n"
+                    "Diff between the configs committed to git (left side) "
+                    "and the configs saved to disk (right side):"
+                    "\n\n{}".format(result))
         else:
             print("Unknown action '{}'".format(parsed.action))
             parser.print_usage()
             return 1
+
+    # We get a BrokenPipeError if we pipe to e.g. less and then quit less
+    # BrokenPipeError inherits from one of these errors, depending on Python version
+    except (IOError, OSError) as exc:
+        if exc.errno != errno.EPIPE:
+            raise
+
     except MismatchedConfigsError as exc:
         msg = textwrap.dedent("""
             !!ERROR!!
@@ -381,7 +475,7 @@ def main(*args, **kwargs):  # pylint: disable=W0613
 
             To ignore the current configs dir, remove its contents:
                 rm -rf {configs}
-            
+
             To save the existing configs dir to the encrypted configs archive, run:
                 {scriptpath} encrypt --force
 
