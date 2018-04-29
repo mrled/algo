@@ -26,7 +26,9 @@ LOGGER = logging.getLogger(__name__)
 class MismatchedConfigsError(Exception):
     """An error indicating that an encrypted configs archive differs from a decrypted configs directory
     """
-    pass
+    def __init__(self, message, configdiff):
+        super(MismatchedConfigsError, self).__init__(message)
+        self.configdiff = configdiff
 
 
 def bettermkdir(path):
@@ -128,7 +130,6 @@ def activate_venv(venvpath):
                 exec(compile(f.read(), activate_this, 'exec'), newglobals)
 
 
-# TODO: handle absolute paths
 def encrypt_configs(encrypted, decrypted, recipient, overwrite=False):
     """Encrypt the configs directory
     """
@@ -172,7 +173,6 @@ def decrypt_configs(encrypted, decrypted, overwrite=False):
     return decrypted
 
 
-# TODO: handle absolute paths
 def test_empty_config(configdir):
     """Test whether the config dir is empty (but ignore hidden files)
     """
@@ -183,25 +183,34 @@ def test_empty_config(configdir):
     return True
 
 
-# TODO: handle absolute paths
-def test_equal_configs(encrypted, decrypted):
+def get_config_diff(encrypted, decrypted):
+    """Test whether configs are equal
+
+    If the configs match, return False; if not, return the result of the diff command.
+    """
     tempdir = tempfile.mkdtemp()
     try:
         temp_decrypted = '{}/{}'.format(tempdir, os.path.basename(decrypted))
         decrypt_configs(encrypted, temp_decrypted)
-        # pipe([
-        #     (['gpg', '--decrypt', encrypted], {}),
-        #     (['gunzip'], {}),
-        #     (['tar', '-x'], {'cwd': tempdir})
-        # ])
-        result = subprocess.call(['diff', '-r', decrypted, temp_decrypted])
-        return result == 0
+        diffproc = subprocess.Popen(
+            ['diff', '-r', decrypted, temp_decrypted],
+            stdout=subprocess.PIPE)
+        diffout, differr = diffproc.communicate()
+        if diffproc.returncode != 0:
+            return diffout
+        return False
     finally:
-        # shutil.rmtree(tempdir)
-        pass
+        shutil.rmtree(tempdir)
 
 
 def predeploy_prep_configs(encrypted, decrypted):
+    """Ensure the configs directory is in the correct state
+
+    Test that the contents of the 'encrypted' archive match the contents of the existing
+    'decrypted' directory.
+    If they do not, raise a MismatchedConfigsError.
+    """
+
     if not os.path.exists(encrypted):
         LOGGER.info("The encrypted configs file is not present, nothing to do")
     elif test_empty_config(decrypted):
@@ -209,14 +218,17 @@ def predeploy_prep_configs(encrypted, decrypted):
             "The decrypted configs directory has no non-hidden files "
             "(and the encrypted tarball exists), decrypting...")
         decrypt_configs(encrypted, decrypted)
-    elif test_equal_configs(encrypted, decrypted):
-        LOGGER.info(
-            "The decrypted configs directory and the encrypted tarball match in content, "
-            "nothing to do")
+
     else:
-        msg = "The decrypted configs directory and the encrypted tarball do not match!"
-        LOGGER.error(msg)
-        raise MismatchedConfigsError(msg)
+        configdiff = get_config_diff(encrypted, decrypted)
+        if configdiff is False:
+            LOGGER.info(
+                "The decrypted configs directory and the encrypted tarball match in content, "
+                "nothing to do")
+        else:
+            msg = "The decrypted configs directory and the encrypted tarball do not match!"
+            LOGGER.error(msg)
+            raise MismatchedConfigsError(msg, configdiff)
 
 
 # TODO: handle absolute path better?
@@ -328,17 +340,9 @@ def main(*args, **kwargs):  # pylint: disable=W0613
     activate_venv(parsed.venv_path)
 
     try:
-        if parsed.action == 'production':
+        if parsed.action == 'production' or parsed.action == 'testing':
             predeploy_prep_configs(parsed.encrypted_configs, parsed.configs_path)
-            deploy("production")
-            encrypt_configs(
-                parsed.encrypted_configs,
-                parsed.configs_path,
-                parsed.encryption_recipient,
-                overwrite=True)
-        elif parsed.action == 'testing':
-            predeploy_prep_configs(parsed.encrypted_configs, parsed.configs_path)
-            deploy("testing")
+            deploy(parsed.action)
             encrypt_configs(
                 parsed.encrypted_configs,
                 parsed.configs_path,
@@ -360,7 +364,7 @@ def main(*args, **kwargs):  # pylint: disable=W0613
             print("Unknown action '{}'".format(parsed.action))
             parser.print_usage()
             return 1
-    except MismatchedConfigsError:
+    except MismatchedConfigsError as exc:
         msg = textwrap.dedent("""
             !!ERROR!!
 
@@ -385,6 +389,7 @@ def main(*args, **kwargs):  # pylint: disable=W0613
                 configs=parsed.configs_path,
                 encconf=parsed.encrypted_configs,
                 scriptpath=SCRIPTPATH))
+        msg += "Output of the `diff` command:\n\n{}".format(exc.configdiff)
         print(msg)
 
 
