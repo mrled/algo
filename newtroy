@@ -48,12 +48,7 @@ TESTING:
         $test_deploy
 
     Tags:
-    - ec2:                required for AWS
-    - vpn:                required for any Algo deployment
-    - cloud:              required for non-local deployments (I think?)
-    - security:           make additional security enhancements
-    - encrypted:          encrypt the AWS EBS volume
-    - ssh_tunneling:      enable SSH tunneling, and save configs/known_hosts
+    Currently deploys using a subset of the production tags; see above.
 
     Extra variables files
     (Values in these files override values set in config.cfg)
@@ -66,7 +61,7 @@ ENDUSAGE
 }
 
 ensurevenv() {
-    if type -p ansible-playbook | grep '/usr.*/bin/ansible-playbook' >/dev/null; then
+    if ! type -p ansible-playbook | grep "$(pwd)" >/dev/null; then
         echo "It appears you are not running from a virtual environment"
         echo "Please do e.g. '. venv/bin/activate' and rerun this script"
         echo "If that doesn't make sense, please read README.md and README.NEWTROY.md"
