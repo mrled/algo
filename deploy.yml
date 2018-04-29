@@ -23,7 +23,6 @@
           tags: always
 
   roles:
-    - { role: dns_route53, tags: ['dns_route53'] }
     - { role: cloud-digitalocean, tags: ['digitalocean'] }
     - { role: cloud-ec2, tags: ['ec2'] }
     - { role: cloud-gce, tags: ['gce'] }
@@ -32,6 +31,10 @@
     - { role: cloud-scaleway, tags: ['scaleway'] }
     - { role: cloud-openstack, tags: ['openstack'] }
     - { role: local, tags: ['local'] }
+
+    # Ensure this role comes after the deployment -
+    # it relies on the VPN server being deployed
+    - { role: dns_route53, tags: ['dns_route53'] }
 
   post_tasks:
     - block:

@@ -1,0 +1,9 @@
+route53_stack_name: "{{ aws_server_name | replace('.', '-') }}-route53-zone"
+
+# WARNING: This relies on the current behavior of upstream algo
+#
+# At the time of this writing, Algo adds the cloud VPN server to a group called 'vpn-host'
+# with the IP address as its "hostname"
+# If this were to change in the future, the IP address will no longer be its 'inventory_hostname',
+# and this will return a result that is nonsensical (at least, for the purposes of this role)
+vpn_host_ip: "{{ groups['vpn-host'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"

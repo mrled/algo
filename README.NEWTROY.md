@@ -72,10 +72,6 @@ There are two components to this as well
 1. The same as the first component in the dnsmasq solution
 2. I added a new `dns_route53` role, controlled by a new `dns_route53` tag, that invokes the Ansible Route53 module
 
-For now, I didn't get very clever with the second component.
-It just creates the records if one of the same name doesn't exist, or updates them if it does exist.
-If the zone already has a record with the same IP address but a different name, it will not get removed.
-
 **Rough edges**
 
 1.  Old records are not removed, possibly leading to confusion.
