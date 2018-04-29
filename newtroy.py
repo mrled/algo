@@ -145,31 +145,31 @@ def encrypt_configs(encrypted, decrypted, recipient, overwrite=False):
     ])
 
 
-def decrypt_configs(encrypted, decrypted_dirname, decrypted_parent=SCRIPTDIR, overwrite=False):
+def decrypt_configs(encrypted, decrypted, overwrite=False):
     """Decrypt the configs tarball
 
     encrypted           The path to the encrypted config archive
-    decrypted_dirname   The name of the folder inside the encrypted config archive
-                        This is almost certainly just 'configs'
-    decrypted_parent    The place to extract the encrypted archive
+    decrypted           The full path to the extracted folder inside the archive
+                        (Requires exactly one folder in the encrypted archive)
+                        This almost ends with '/configs'
     overwrite           If true, allow extraction even if decrypted_dirname contains files
     """
-    decrypted_path = os.path.join(decrypted_parent, decrypted_dirname)
+    decrypted_parent, decrypted_dirname = os.path.split(decrypted)
     bettermkdir(decrypted_parent)
-    if not test_empty_config(decrypted_path) and not overwrite:
-        raise Exception("Decrypted directory '{}' is not empty".format(decrypted_path))
+    if not test_empty_config(decrypted) and not overwrite:
+        raise Exception("Decrypted directory '{}' is not empty".format(decrypted))
     pipe([
         (['gpg', '--decrypt', encrypted], {}),
         (['gunzip'], {}),
         (['tar', '-x'], {'cwd': decrypted_parent})
     ])
-    if not os.path.exists(decrypted_path):
+    if not os.path.exists(decrypted):
         raise Exception(" ".join([
             "Intended to decrypt {} to parent directory {}, ".format(encrypted, decrypted_parent),
-            "but did not find the {} directory we expected afterwards; ".format(decrypted_path),
+            "but did not find the {} directory we expected afterwards; ".format(decrypted),
             "that directory contains: {}".format(os.listdir(decrypted_parent))
         ]))
-    return decrypted_path
+    return decrypted
 
 
 # TODO: handle absolute paths
@@ -187,8 +187,8 @@ def test_empty_config(configdir):
 def test_equal_configs(encrypted, decrypted):
     tempdir = tempfile.mkdtemp()
     try:
-        temp_decrypted = decrypt_configs(
-            encrypted, os.path.basename(decrypted), decrypted_parent=tempdir)
+        temp_decrypted = '{}/{}'.format(tempdir, os.path.basename(decrypted))
+        decrypt_configs(encrypted, temp_decrypted)
         # pipe([
         #     (['gpg', '--decrypt', encrypted], {}),
         #     (['gunzip'], {}),
@@ -208,7 +208,7 @@ def predeploy_prep_configs(encrypted, decrypted):
         LOGGER.info(
             "The decrypted configs directory has no non-hidden files "
             "(and the encrypted tarball exists), decrypting...")
-        decrypt_configs(encrypted, os.path.basename(decrypted))
+        decrypt_configs(encrypted, decrypted)
     elif test_equal_configs(encrypted, decrypted):
         LOGGER.info(
             "The decrypted configs directory and the encrypted tarball match in content, "
@@ -353,7 +353,7 @@ def main(*args, **kwargs):  # pylint: disable=W0613
         elif parsed.action == 'decrypt':
             result = decrypt_configs(
                 parsed.encrypted_configs,
-                os.path.basename(parsed.configs_path),
+                parsed.configs_path,
                 overwrite=parsed.force)
             print("Extracted the encrypted configs archive to {}".format(result))
         else:
