@@ -1,0 +1,68 @@
+---
+
+- name: Check that encrypted configs file exists
+  stat:
+    path: "{{ newtroy_encrypted_configs }}"
+  register: encrypted_configs_stat_result
+
+- name: Check whether the configs directory is empty (ignoring hidden files)
+  command: ls configs/
+  register: configs_contents_result
+  when: encrypted_configs_stat_result.stat.exists
+
+- name: Test whether encrypted configs has same contents as existing configs directory
+  when:
+    - encrypted_configs_stat_result.stat.exists
+    - configs_contents_result.stdout_lines | length > 0
+  block:
+
+  - name: Create decrypted configs test directory
+    file:
+      path: test_configs
+      state: directory
+
+  - name: Extract encrypted configs to test directory
+    shell: >
+      gpg --decrypt "../{{ newtroy_encrypted_configs }}" |
+        gunzip |
+        tar -x
+      chdir: test_configs
+
+  - name: Compare the existing configs directory to the decrypted/extracted configs
+    shell: >
+      diff -r "configs" "test_configs/configs" > /dev/null
+    register: compare_configs_result
+
+  # - name: Remove decrypted configs test directory
+  #   file:
+  #     path: test_configs
+  #     state: absent
+
+  - name: When the existing configs has different contents than decrypted/extracted configs, fail
+    fail:
+      msg: |
+        The existing configs directory is different than the extracted contents of {{ newtroy_encrypted_configs }}
+        This probably means you have made some changes to the configs/ directory
+
+        TROUBLESHOOTING
+
+        1.  Examine the contents of {{ newtroy_encrypted_configs }} in test_configs/configs
+        2.  Compare the existing configs/ dir to the contents of {{ newtroy_encrypted_configs }} with e.g.
+                'diff -r configs test_configs/configs'
+        3.  Consider encrypting/compressing the changes in configs/ and saving the result to {{ newtroy_encrypted_configs }}
+        4.  You can overwrite the contents of configs/ by setting the following in config.cfg
+                'newtroy_overwrite_configs_with_extracted_decrypted_configs: true'
+            THIS WILL OVERWRITE THE CONTENTS OF THE configs/ DIRECTORY!
+
+    when:
+      - compare_configs_result.rc != 0
+      - newtroy_overwrite_configs_with_extracted_decrypted_configs | default(false) bool == false
+
+- name: Decrypt the encrypted configs file
+  shell: >
+    gpg --decrypt "../{{ newtroy_encrypted_configs }}" |
+      gunzip |
+      tar -x
+  when:
+    - encrypted_configs_stat_result.stat.exists
+    - configs_contents_result.stdout_lines | length <= 0
