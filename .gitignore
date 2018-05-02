@@ -8,3 +8,4 @@ env*
 ansible.log
 .vscode
 venv*
+*.pyc
