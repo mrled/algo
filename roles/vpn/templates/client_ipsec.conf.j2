@@ -1,4 +1,4 @@
-conn ikev2-{{ IP_subject_alt_name }}
+conn ikev2-{{ newtroy_server_cert_common_name }}
     fragmentation=yes
     rekey=no
     dpdaction=clear
@@ -14,8 +14,8 @@ conn ikev2-{{ IP_subject_alt_name }}
     esp={{ ciphers.defaults.esp }}
 {% endif %}
 
-    right={{ IP_subject_alt_name }}
-    rightid={{ IP_subject_alt_name }}
+    right={{ newtroy_server_cert_common_name }}
+    rightid={{ newtroy_server_cert_common_name }}
     rightsubnet=0.0.0.0/0
     rightauth=pubkey
 

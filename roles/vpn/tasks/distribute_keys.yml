@@ -13,13 +13,13 @@
       owner: strongswan
       group: "{{ root_group|default('root') }}"
       mode: "0600"
-    - src: "{{ newtroy_server_configs }}/pki/certs/{{ IP_subject_alt_name }}.crt"
-      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/certs/{{ IP_subject_alt_name }}.crt"
+    - src: "{{ newtroy_server_configs }}/pki/certs/{{ newtroy_server_cert_common_name }}.crt"
+      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/certs/{{ newtroy_server_cert_common_name }}.crt"
       owner: strongswan
       group: "{{ root_group|default('root') }}"
       mode: "0600"
-    - src: "{{ newtroy_server_configs }}/pki/private/{{ IP_subject_alt_name }}.key"
-      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/private/{{ IP_subject_alt_name }}.key"
+    - src: "{{ newtroy_server_configs }}/pki/private/{{ newtroy_server_cert_common_name }}.key"
+      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/private/{{ newtroy_server_cert_common_name }}.key"
       owner: strongswan
       group: "{{ root_group|default('root') }}"
       mode: "0600"

@@ -35,7 +35,7 @@
         shell: /bin/false
         ssh_key_type: ecdsa
         ssh_key_bits: 256
-        ssh_key_comment: '{{ item }}@{{ IP_subject_alt_name }}'
+        ssh_key_comment: '{{ item }}@{{ newtroy_server_cert_common_name }}'
         ssh_key_passphrase: "{{ easyrsa_p12_export_password }}"
         update_password: on_create
         state: present
@@ -54,7 +54,7 @@
     - name: Generate SSH fingerprints
       # NEWTROY: sort these so that they are in the same order every time
       # This eliminates churn from the encrypted configs archive
-      shell: ssh-keyscan {{ IP_subject_alt_name }} 2>/dev/null | sort
+      shell: ssh-keyscan {{ newtroy_server_cert_common_name }} 2>/dev/null | sort
       register: ssh_fingerprints
 
     - name: Fetch users SSH private keys

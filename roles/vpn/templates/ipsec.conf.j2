@@ -20,8 +20,8 @@ conn %default
 
     left=%any
     leftauth=pubkey
-    leftid={{ IP_subject_alt_name }}
-    leftcert={{ IP_subject_alt_name }}.crt
+    leftid={{ newtroy_server_cert_common_name }}
+    leftcert={{ newtroy_server_cert_common_name }}.crt
     leftsendcert=always
     leftsubnet=0.0.0.0/0,::/0
 

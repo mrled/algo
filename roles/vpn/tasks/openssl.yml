@@ -50,10 +50,10 @@
       -out cacert.pem -x509 -days 3650
       -batch
       -passout pass:"{{ easyrsa_CA_password }}" &&
-      touch {{ IP_subject_alt_name }}_ca_generated
+      touch {{ newtroy_server_cert_common_name }}_ca_generated
     args:
       chdir: "{{ newtroy_server_configs }}/pki/"
-      creates: "{{ IP_subject_alt_name }}_ca_generated"
+      creates: "{{ newtroy_server_cert_common_name }}_ca_generated"
       executable: bash
 
   - name: Copy the CA certificate
@@ -73,21 +73,21 @@
       {{ openssl_bin }} req -utf8 -new
       -newkey {{ algo_params | default('ec:ecparams/prime256v1.pem') }}
       -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName={{ subjectAltName }}"))
-      -keyout private/{{ IP_subject_alt_name }}.key
-      -out reqs/{{ IP_subject_alt_name }}.req -nodes
+      -keyout private/{{ newtroy_server_cert_common_name }}.key
+      -out reqs/{{ newtroy_server_cert_common_name }}.req -nodes
       -passin pass:"{{ easyrsa_CA_password }}"
-      -subj "/CN={{ IP_subject_alt_name }}" -batch &&
+      -subj "/CN={{ newtroy_server_cert_common_name }}" -batch &&
       {{ openssl_bin }} ca -utf8
-      -in reqs/{{ IP_subject_alt_name }}.req
-      -out certs/{{ IP_subject_alt_name }}.crt
+      -in reqs/{{ newtroy_server_cert_common_name }}.req
+      -out certs/{{ newtroy_server_cert_common_name }}.crt
       -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName={{ subjectAltName }}"))
       -days 3650 -batch
       -passin pass:"{{ easyrsa_CA_password }}"
-      -subj "/CN={{ IP_subject_alt_name }}" &&
-      touch certs/{{ IP_subject_alt_name }}_crt_generated
+      -subj "/CN={{ newtroy_server_cert_common_name }}" &&
+      touch certs/{{ newtroy_server_cert_common_name }}_crt_generated
     args:
       chdir: "{{ newtroy_server_configs }}/pki/"
-      creates: certs/{{ IP_subject_alt_name }}_crt_generated
+      creates: certs/{{ newtroy_server_cert_common_name }}_crt_generated
       executable: bash
 
   - name: Build the client's pair
@@ -145,7 +145,7 @@
   - name: Get active users
     shell: >
       grep ^V index.txt |
-      grep -v "{{ IP_subject_alt_name }}" |
+      grep -v "{{ newtroy_server_cert_common_name }}" |
       awk '{print $5}' |
       sed 's/\/CN=//g'
     args:
@@ -170,7 +170,7 @@
   - name: Genereate new CRL file
     shell: >
       {{ openssl_bin }} ca -gencrl
-      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ IP_subject_alt_name }}"))
+      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ newtroy_server_cert_common_name }}"))
       -passin pass:"{{ easyrsa_CA_password }}"
       -out crl/algo.root.pem
     when:

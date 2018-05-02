@@ -2,7 +2,7 @@
 
 - name: Register this server namespace UUID
   set_fact:
-    newtroy_this_server_namespace: "{{ IP_subject_alt_name | newtroy_nbuuid(newtroy_algo_namespace) }}"
+    newtroy_this_server_namespace: "{{ newtroy_server_cert_common_name | newtroy_nbuuid(newtroy_algo_namespace) }}"
 
 - name: Register derivative UUIDs
   set_fact:
