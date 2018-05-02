@@ -27,19 +27,19 @@ class FilterModule(object):
         """
         if not isinstance(namespace, uuid.UUID):
             namespace = uuid.UUID(namespace)
-        return uuid.uuid5(namespace, str(name))
+        return str(uuid.uuid5(namespace, str(name)))
 
     @staticmethod
     def url_nbuuid(name):
         """Generate a name-based UUID in the URL namespace
         """
-        return uuid.uuid5(uuid.NAMESPACE_URL, name)
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, name))
 
     @staticmethod
     def dns_nbuuid(name):
         """Generate a name-based UUID in the DNS namespace
         """
-        return uuid.uuid5(uuid.NAMESPACE_DNS, name)
+        return str(uuid.uuid5(uuid.NAMESPACE_DNS, name))
 
     @staticmethod
     def test_nbuuid(name, namespace=None):
