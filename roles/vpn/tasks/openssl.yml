@@ -125,6 +125,12 @@
     args:
       chdir: "configs/{{ IP_subject_alt_name }}/pki/"
       executable: bash
+      # NEWTROY: Do not recreate .p12 files if they already exist
+      # One downside here is that if you change the p12 password, they won't get regenerated
+      # For my purposes, I think that's ok/unsurprising, since I set the p12 password in the config
+      # Could theoretically test that the p12 has the same password or something,
+      # but I'm not sure it's worth doing that at this time.
+      creates: "private/{{ item }}.p12"
     with_items: "{{ users }}"
     register: p12
 
