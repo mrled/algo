@@ -445,11 +445,11 @@ def main(*args, **kwargs):  # pylint: disable=W0613
                 print("Extracted the encrypted configs archive to {}".format(result))
             elif parsed.configaction == 'gitdiff':
                 result = config_git_diff(parsed.encrypted_configs, parsed.configs_path)
-                print(
-                    "\n\n"
-                    "Diff between the configs committed to git (left side) "
-                    "and the configs saved to disk (right side):"
-                    "\n\n{}".format(result))
+                print(result)
+            else:
+                print("Unknown configaction '{}'".format(parsed.configaction))
+                parser.print_usage()
+                return 1
         else:
             print("Unknown action '{}'".format(parsed.action))
             parser.print_usage()
