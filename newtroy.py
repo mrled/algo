@@ -113,9 +113,10 @@ def activate_venv(venvpath):
     """
     if sys.prefix != venvpath:
         if hasattr(sys, 'real_prefix'):
+            real_prefix = sys.real_prefix  # pylint: disable=E1101
             LOGGER.warning(" ".join([
                 "Will activate venv at {}, ".format(venvpath),
-                "but there was an already activated venv at {}; ".format(sys.real_prefix),
+                "but there was an already activated venv at {}; ".format(real_prefix),
                 "if you have problems, consider deactivating that environment in your shell"]))
 
         # Based on instructions found in the activate_this.py on my system
@@ -245,7 +246,7 @@ def config_git_diff(encrypted, configspath):
 
     # Get the contents of the committed encrypted configs file
     command = ['git', 'show', 'HEAD:{}'.format(encrypted_git_subpath)]
-    gitproc = subprocess.Popen(command, stdout=subprocess.PIPE, cwd=SCRIPTDIR)        
+    gitproc = subprocess.Popen(command, stdout=subprocess.PIPE, cwd=SCRIPTDIR)
     gitout, giterr = gitproc.communicate()
     if giterr is not None:
         LOGGER.debug("STDERR from '{}': {}".format(" ".join(command), giterr.encode()))
@@ -268,10 +269,8 @@ def config_git_diff(encrypted, configspath):
                 encrypted, temp_decrypted,
                 encrypted_path_replace="   SAVED TO DISK",
                 decrypted_path_replace="COMMITTED TO GIT")
-
         finally:
             shutil.rmtree(committed_config_decrypted_tempdir)
-
 
     finally:
         shutil.rmtree(committed_config_tempdir)
@@ -335,7 +334,7 @@ def deploy(environment):
         ]
     else:
         raise Exception("Invalid environment name")
-    
+
     command = ['ansible-playbook', 'deploy.yml', '-t', ','.join(tags)]
     for varsfile in varsfiles:
         command += ['-e', '@{}'.format(varsfile)]
@@ -392,7 +391,7 @@ def main(*args, **kwargs):  # pylint: disable=W0613
             'The location of the virtual environment. '
             'Used regardless of whether it is activated in your shell. '
             'If it does not exist, it will be created.'))
-    
+
     subparsers = parser.add_subparsers(dest='action')
 
     sub_deploy = subparsers.add_parser('deploy', help="Deploy Algo")
