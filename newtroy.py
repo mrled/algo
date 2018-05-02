@@ -305,6 +305,25 @@ def predeploy_prep_configs(encrypted, decrypted):
             raise MismatchedConfigsError(msg, configdiff)
 
 
+def postdeploy_prep_configs(encrypted, decrypted, recipient):
+    """Recreate the configs archive after deployment
+
+    Should only result in a new encrypted archive if the _contents_ of the archive differ.
+    That is, some metadata like timestamps may differ and should not result in a new archive;
+    only when the contents differ should the new archive be created.
+    """
+    gitdiff = get_config_diff(encrypted, decrypted)
+    if gitdiff is not False:
+        LOGGER.info(' '.join([
+            "Found difference between configuration at {}".format(decrypted),
+            "and encrypted archive at {}; recreating config...".format(encrypted)]))
+        encrypt_configs(encrypted, decrypted, recipient, overwrite=True)
+    else:
+        LOGGER.info(' '.join([
+            "No between configuration at {}".format(decrypted),
+            "and encrypted archive at {}; will not recreate encrypted archive".format(encrypted)]))
+
+
 def deploy(environment):
     """Deploy Algo
     """
@@ -425,11 +444,10 @@ def main(*args, **kwargs):  # pylint: disable=W0613
         if parsed.action == 'deploy':
             predeploy_prep_configs(parsed.encrypted_configs, parsed.configs_path)
             deploy(parsed.environment)
-            encrypt_configs(
+            postdeploy_prep_configs(
                 parsed.encrypted_configs,
                 parsed.configs_path,
-                parsed.encryption_recipient,
-                overwrite=True)
+                parsed.encryption_recipient)
         elif parsed.action == 'config':
             if parsed.configaction == 'encrypt':
                 encrypt_configs(
