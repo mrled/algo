@@ -35,11 +35,17 @@ conn %default
 
 # Client configs
 # example: https://www.strongswan.org/testing/testresults/ikev2/config-payload/, especially moon.ipsec.conf
+# Note that each user gets _two_ conn stanzas, because some operating systems submit their ID as
+# the bare 'CommonName' of their cert, and some submit it as ASN.1-encoded '/CN=CommonName'
 
 {% for user in users %}
 
 conn AlgoUser-{{ user }}
     rightid={{ user }}
+    rightsourceip={{ vpn_network | ipaddr(loop.index) | ipaddr('address') }}
+    auto=add
+conn AlgoUser-CN{{ user }}
+    rightid="/CN={{ user }}"
     rightsourceip={{ vpn_network | ipaddr(loop.index) | ipaddr('address') }}
     auto=add
 
