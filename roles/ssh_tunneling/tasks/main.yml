@@ -52,7 +52,9 @@
       with_items: "{{ users }}"
 
     - name: Generate SSH fingerprints
-      shell: ssh-keyscan {{ IP_subject_alt_name }} 2>/dev/null
+      # NEWTROY: sort these so that they are in the same order every time
+      # This eliminates churn from the encrypted configs archive
+      shell: ssh-keyscan {{ IP_subject_alt_name }} 2>/dev/null | sort
       register: ssh_fingerprints
 
     - name: Fetch users SSH private keys
