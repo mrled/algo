@@ -60,12 +60,12 @@
     - name: Fetch users SSH private keys
       fetch:
         src: '/var/jail/{{ item }}/.ssh/id_ecdsa'
-        dest: configs/{{ IP_subject_alt_name }}/{{ item }}.ssh.pem
+        dest: "{{ newtroy_server_configs }}/{{ item }}.ssh.pem"
         flat: yes
       with_items: "{{ users }}"
 
     - name: Change mode for SSH private keys
-      local_action: file path=configs/{{ IP_subject_alt_name }}/{{ item }}.ssh.pem mode=0600
+      local_action: file path="{{ newtroy_server_configs }}/{{ item }}.ssh.pem" mode=0600
       with_items: "{{ users }}"
       become: false
 
@@ -73,14 +73,14 @@
       local_action:
         module: template
         src: known_hosts.j2
-        dest: configs/{{ IP_subject_alt_name }}/known_hosts
+        dest: "{{ newtroy_server_configs }}/known_hosts"
       become: no
 
     - name: Build the client ssh config
       local_action:
         module: template
         src: ssh_config.j2
-        dest: configs/{{ IP_subject_alt_name }}/{{ item }}.ssh_config
+        dest: "{{ newtroy_server_configs }}/{{ item }}.ssh_config"
         mode: 0600
       become: no
       with_items:

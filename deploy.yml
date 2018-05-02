@@ -92,7 +92,7 @@
       - name: Delete the CA key
         local_action:
           module: file
-          path: "configs/{{ IP_subject_alt_name }}/pki/private/cakey.pem"
+          path: "{{ newtroy_server_configs }}/pki/private/cakey.pem"
           state: absent
         become: no
         tags: always
