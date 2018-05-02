@@ -312,15 +312,19 @@ def postdeploy_prep_configs(encrypted, decrypted, recipient):
     That is, some metadata like timestamps may differ and should not result in a new archive;
     only when the contents differ should the new archive be created.
     """
-    gitdiff = get_config_diff(encrypted, decrypted)
-    if gitdiff is not False:
+    if not os.path.exists(encrypted):
+        LOGGER.info(' '.join([
+            "No encrypted archive at {},".format(encrypted),
+            "will save a new one from {}".format(decrypted)]))
+        encrypt_configs(encrypted, decrypted, recipient)
+    elif get_config_diff(encrypted, decrypted) is not False:
         LOGGER.info(' '.join([
             "Found difference between configuration at {}".format(decrypted),
             "and encrypted archive at {}; recreating config...".format(encrypted)]))
         encrypt_configs(encrypted, decrypted, recipient, overwrite=True)
     else:
         LOGGER.info(' '.join([
-            "No between configuration at {}".format(decrypted),
+            "No difference between configuration at {}".format(decrypted),
             "and encrypted archive at {}; will not recreate encrypted archive".format(encrypted)]))
 
 
