@@ -29,9 +29,15 @@ I will document changes and my user here, and anyone who wants to use this as a 
 
 ### Misc stuff
 
-- My values are committed in `config.cfg`
-- Encrypted `configs.tar.gz.gpg` (see below)
-- Logging is added to `ansible.cfg`
+ -  My values are committed in `config.cfg`
+
+ -  Encrypted `configs.tar.gz.gpg` (see below)
+
+ -  Logging is added to `ansible.cfg`
+
+ -  Using the `newtroy.py` script,
+    the `configs/` dir is automatically encrypted and saved to `configs.tar.gz.gpg` on successful deployment,
+    and that encrypted archive is automatically decrypted and extracted to `configs/` before deployment.
 
 ### Resolving client hosts with dnsmasq
 
@@ -70,12 +76,7 @@ This is much better than my previous solution (with dnsmasq, above) because it w
 There are two components to this as well
 
 1. The same as the first component in the dnsmasq solution
-2. I added a new `dns_route53` role, controlled by a new `dns_route53` tag, that invokes the Ansible Route53 module
-
-**Rough edges**
-
-1.  Old records are not removed, possibly leading to confusion.
-    Solution: just fix this by hand
+2. I added a new `dns_route53` role, controlled by a new `dns_route53` tag, that deploys the Route53 changes
 
 ### Use of Ansible vault
 
@@ -99,26 +100,44 @@ For the setup:
 
 See also: https://benincosa.com/?p=3235
 
-## Deploying to production
+## Deploying
 
 As I said above, I am not maintaining the `algo` script.
 
-However, I have created a new `newtroy` script,
+However, I have created a new `newtroy.py` script,
 which uses Ansible to deploy with all of my defaults.
-No arguments are required!
-Simply run `./newtroy production` to deploy.
 
-See that script's help for details on what it's doing.
+See `newtroy.py --help` for details on how to use it.
 
 Once more, for emphasis: **Don't use the `algo` script.**
 
-## Deploying a testing environment
+### Deploying production
+
+This is very easy, just do
+
+    ./newtroy.py deploy production
+
+Note that this will automatically decrypt the configs archive in `configs.tar.gz.gpg`
+and extract it to `configs/` first,
+then it will run the deployment,
+and then it will compress and encrypt the resulting `configs/` directory,
+and save the resulting archive back to `configs.tar.gz.gpg`.
+
+See below for more information about working with the encrypted configs archive,
+including how to view a diff of changes.
+
+The script makes some effort only to save changes to content -
+while `tar` does track metadata like last updated time,
+the script will not automatically re-encrypt the configs if the file _content_ has not changed.
+(But again, see below for more information,
+including instructions on how to tell it to encrypt the configs explicitly,
+which will always save the tar file even if only metadata has changed.)
+
+### Deploying a testing environment
 
 I sometimes use DigitalOcean for testing.
 For testing deployments, we do not update Route53.
-To deploy to testing, you can run `./newtroy testing`.
-
-See help in the `newtroy` script for details on this deployment.
+To deploy to testing, you can run `./newtroy.py deploy testing`.
 
 I have also designed this to work with the master branch of upstream Algo directly.
 To use it, check out the upstream master branch and then copy the files from the newtroy branch:
@@ -132,7 +151,20 @@ To use it, check out the upstream master branch and then copy the files from the
         config.test.vault.cfg \
         .vault-pass-script \
         .vault-passphrase.gpg \
-        newtroy
+        newtroy.py
+
+## Working with encrypted configs
+
+We save an encrypted archive of contents of the `configs/` directory to git.
+
+1.  Encrypt the `configs` dir to `configs.tar.gz.gpg`:
+    `./newtroy.py config encrypt`
+2.  Decrypt the `configs.tar.gz` archive to `configs/`:
+    `./newtroy config decrypt`
+3.  View the difference between the contents of the `configs/` dir _as it exists on disk_
+    and the contents of the `configs.tar.gz.gpg` archive _as it was committed to git_
+    (that is, not the version as it may exist on disk which might have uncommitted changes):
+    `./newtroy config gitdiff | less`
 
 ### Experimental settings
 
@@ -149,38 +181,6 @@ These settings are NOT saved in `config.cfg`/`newtroy`.
     Update: Based on
     [this](https://trailofbits.github.io/algo/troubleshooting.html#various-websites-appear-to-be-offline-through-the-vpn),
     my guess is now that modifying MTU was not related to my problem.
-
-
-## Redeployment notes
-
-It appear to keep the same (Elastic) IP address, but terminates the old EC2 VM and provisions a new one.
-
-When deploying to a machine that has already been deployed to, it will re-encrypt the CA key and all client keys. However, it will not re-key the CA; the old client profiles are still valid.
-
-For this reason, there's not much point in saving the CA or client key passphrases. If you forget them, you can just regenerate them by redeploying and reconfigure the clients.
-
-## Troubleshooting
-
-SSH using the administrative user (not one of your VPN client users, which have SSH tunneling but no shell access) like so:
-
-    algoserver=1.2.3.4
-    ssh -o "UserKnownHostsFile=configs/$algoserver/known_hosts" -i configs/algo.pem -l ubuntu "$algoserver"
-
-## Working with the encrypted configs
-
-The `configs` directory is tar'd, gzip'd, gpg'd, and committed to the repository.
-
-Common commands:
-
-    # Encrypt/decrypt
-    ./cryptconfig encrypt
-    ./cryptconfig decrypt
-
-    # Test whether the contents of the configs/ dir match the contents of the encrypted configs archive
-    ./cryptconfig test
-
-    # Show detailed help
-    ./cryptconfig -h
 
 ## Misc
 
