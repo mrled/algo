@@ -1,5 +1,17 @@
 ---
 
+- name: Register this server namespace UUID
+  set_fact:
+    newtroy_this_server_namespace: "{{ IP_subject_alt_name | newtroy_nbuuid(newtroy_algo_namespace) }}"
+
+- name: Register derivative UUIDs
+  set_fact:
+    # "name-based UUIDs" per RFC4122. Will return the same value given the same "name" (pipe data)
+    # and the same "namespace" (passed to the newtroy_nbuuid function in parens)
+    pkcs12_PayloadCertificateUUID: "{{ 'pkcs12_PayloadCertificateUUID' | newtroy_nbuuid(newtroy_this_server_namespace) }}"
+    VPN_PayloadIdentifier: "{{ 'VPN_PayloadIdentifier' | newtroy_nbuuid(newtroy_this_server_namespace) }}"
+    CA_PayloadIdentifier: "{{ 'CA_PayloadIdentifier' | newtroy_nbuuid(newtroy_this_server_namespace) }}"
+
 - name: Register p12 PayloadContent
   shell: cat private/{{ item }}.p12 | base64
   register:  PayloadContent

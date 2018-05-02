@@ -1,5 +1,5 @@
 {
-    "uuid": "{{ 600000 | random | to_uuid }}",
+    "uuid": "{{ item.0 | newtroy_nbuuid(newtroy_this_server_namespace) }}",
     "name": "Algo {{ IP_subject_alt_name }}",
     "type": "ikev2-cert",
     "remote": {

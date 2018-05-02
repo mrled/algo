@@ -177,13 +177,13 @@
     <key>PayloadDisplayName</key>
     <string>{{ IP_subject_alt_name }} IKEv2</string>
     <key>PayloadIdentifier</key>
-    <string>donut.local.{{ 500000 | random | to_uuid | upper }}</string>
+    <string>donut.local.{{ 'MobileConfig_PayloadIdentifier' + item.0 | newtroy_nbuuid(newtroy_this_server_namespace) }}</string>
     <key>PayloadRemovalDisallowed</key>
     <false/>
     <key>PayloadType</key>
     <string>Configuration</string>
     <key>PayloadUUID</key>
-    <string>{{ 400000 | random | to_uuid | upper }}</string>
+    <string>donut.local.{{ 'MobileConfig_PayloadUUID' + item.0 | newtroy_nbuuid(newtroy_this_server_namespace) }}</string>
     <key>PayloadVersion</key>
     <integer>1</integer>
 </dict>
