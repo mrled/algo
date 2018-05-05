@@ -26,21 +26,15 @@ Resources:
       HostedZoneId: !Ref NewTroyZone
       RecordSets:
 
-        - Name: {{ newtroy_vpn_server_hostname }}.{{ vpn_domain }}.
-          Type: A
-          TTL: 300
-          ResourceRecords:
-            - {{ vpn_host_ip }}
-
 {%for user in users %}
 
-        - Name: {{ user }}.{{ vpn_domain }}.
+        - Name: {{ user }}.{{ newtroy_vpn_internal_domain }}.
           Type: A
           TTL: 300
           ResourceRecords:
             - {{ vpn_network | ipaddr(loop.index + 1) | ipaddr('address') }}
 
-        - Name: {{ user }}.{{ vpn_domain }}.
+        - Name: {{ user }}.{{ newtroy_vpn_internal_domain }}.
           Type: AAAA
           TTL: 300
           ResourceRecords:
