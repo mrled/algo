@@ -2,7 +2,7 @@
 
 - block:
 
-  - name: Generate temporary Route53 CloudFormation template
+  - name: Generate Route53 CloudFormation template
     template:
       src: stack.yml.j2
       dest: "configs/{{ route53_stack_name }}.yml"
@@ -21,12 +21,6 @@
         Environment: Algo
     register: stack
 
-    when:
-    - newtroy_vpn_internal_domain is defined
-    - newtroy_vpn_internal_hosted_zone_id is defined
-
-  always:
-    - name: Remove temporary Route53 CloudFormation template
-      file:
-        path: "configs/{{ route53_stack_name }}.yml"
-        state: absent
+  when:
+  - newtroy_vpn_internal_domain is defined
+  - newtroy_vpn_internal_hosted_zone_id is defined
