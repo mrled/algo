@@ -21,7 +21,7 @@ Later, as long as the `env.PSYOPS` directory still exists, you can just do
 ## Differences from upstream
 
 As I make my own modifications, some bits that I don't use may rot a little.
-For instance, I'm using AWS, and when I added `dns_vpnclients_route53` and `dns_vpnserver_route53`,
+For instance, I'm using AWS, and when I added `dns_vpn_internal_network_route53` and `dns_vpn_server_route53`,
 I didn't also add `dns_gcp` or `dns_azure` along with it.
 I also am not going to maintain the `algo` script, so you should deploy from Ansible (see below).
 That said, I don't want to outright _remove_ that functionality, because it will make merging from upstream harder.
@@ -77,8 +77,8 @@ This is much better than my previous solution (with dnsmasq, above) because it w
 There are two components to this as well
 
 1.  The same as the first component in the dnsmasq solution
-2.  I added a new `dns_vpnclients_route53` role,
-    controlled by a new `dns_vpnclients_route53` tag,
+2.  I added a new `dns_vpn_internal_network_route53` role,
+    controlled by a new `dns_vpn_internal_network_route53` tag,
     that sets DNS names in Route53 to the internal (RFC1918) VPN IP addresses
 
 ### Use of Ansible vault

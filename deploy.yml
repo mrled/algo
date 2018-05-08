@@ -24,7 +24,7 @@
 
   roles:
     # Run this role first to set client IP addresses early
-    - { role: dns_vpnclients_route53, tags: ['dns_vpnclients_route53'] }
+    - { role: dns_vpn_internal_network_route53, tags: ['dns_vpn_internal_network_route53'] }
 
     - { role: cloud-digitalocean, tags: ['digitalocean'] }
     - { role: cloud-ec2, tags: ['ec2'] }
@@ -37,7 +37,7 @@
 
     # Ensure this role comes after the deployment -
     # it relies on the VPN server being deployed
-    - { role: dns_vpnserver_route53, tags: ['dns_vpnserver_route53'] }
+    - { role: dns_vpn_server_route53, tags: ['dns_vpn_server_route53'] }
 
   post_tasks:
     - block:

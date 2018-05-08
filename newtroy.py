@@ -346,8 +346,8 @@ def deploy(environment):
     # Arguments for specific environments
     if environment == "production":
         tags += [
-            'dns_vpnclients_route53',   # Enable Route53 DNS for internal VPN client addreses
-            'dns_vpnserver_route53',    # Enable Route53 DNS for connecting to the server
+            'dns_vpn_internal_network_route53',     # Enable Route53 DNS for internal VPN client addreses
+            'dns_vpn_server_route53',               # Enable Route53 DNS for connecting to the server
         ]
     elif environment == "testing":
         varsfiles += [
