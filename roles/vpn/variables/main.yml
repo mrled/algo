@@ -1,0 +1,7 @@
+newtroy_this_server_namespace: "{{ newtroy_server_cert_common_name | newtroy_nbuuid(newtroy_algo_namespace) }}"
+
+# "name-based UUIDs" per RFC4122. Will return the same value given the same "name" (pipe data)
+# and the same "namespace" (passed to the newtroy_nbuuid function in parens)
+pkcs12_PayloadCertificateUUID: "{{ 'pkcs12_PayloadCertificateUUID' | newtroy_nbuuid(newtroy_this_server_namespace) }}"
+VPN_PayloadIdentifier: "{{ 'VPN_PayloadIdentifier' | newtroy_nbuuid(newtroy_this_server_namespace) }}"
+CA_PayloadIdentifier: "{{ 'CA_PayloadIdentifier' | newtroy_nbuuid(newtroy_this_server_namespace) }}"

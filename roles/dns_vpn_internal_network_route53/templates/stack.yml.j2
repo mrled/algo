@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: {{ route53_stack_name }} VPN records
+
+# NOTES:
+#
+# 1.    Cannot use a pure template
+#       Unfortunately, we cannot use a pure template with inputs rather than Jinja2 variable interpolation
+#       because there is no way to loop in a CloudFormation template
+#       (because Amazon fucking hates you)
+#
+# 2.    Note the trailing dots
+#       Route53 requires trailing dots for hostnames
+
+Parameters:
+
+  NewTroyZone:
+    Type: String
+    Description: The ID for the zone to add these records to
+
+Resources:
+
+  NewtroyZoneRecords:
+    Type: AWS::Route53::RecordSetGroup
+
+    Properties:
+      HostedZoneId: !Ref NewTroyZone
+      RecordSets:
+
+        - Name: {{ newtroy_vpn_server_hostname }}.{{ newtroy_vpn_internal_domain }}.
+          Type: A
+          TTL: 300
+          ResourceRecords:
+            - {{ local_service_ip }}
+
+{%for user in users %}
+
+        - Name: {{ user }}.{{ newtroy_vpn_internal_domain }}.
+          Type: A
+          TTL: 300
+          ResourceRecords:
+            - {{ vpn_network | ipaddr(loop.index + newtroy_network_client_offset) | ipaddr('address') }}
+
+        - Name: {{ user }}.{{ newtroy_vpn_internal_domain }}.
+          Type: AAAA
+          TTL: 300
+          ResourceRecords:
+            - {{ vpn_network_ipv6 | ipaddr(loop.index + newtroy_network_client_offset) | ipaddr('address') }}
+
+{%endfor%}

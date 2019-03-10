@@ -5,6 +5,8 @@
       module: shell
         openssl rand -hex 16
     register: CA_password
+    register: CA_password_generated
+    when: CA_password is not defined
 
   - name: Generate p12 export password
     local_action:
@@ -21,7 +23,7 @@
   tags: update-users
 
 - set_fact:
-    CA_password: "{{ CA_password.stdout }}"
+    CA_password: easyrsa_CA_password: "{{ CA_password|default(CA_password_generated.stdout) }}"
     IP_subject_alt_name: "{{ IP_subject_alt_name }}"
 
 - name: Set IPv6 support as a fact

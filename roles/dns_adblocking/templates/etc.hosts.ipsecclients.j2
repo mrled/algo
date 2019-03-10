@@ -1,0 +1,4 @@
+{{ local_service_ip }} {{ newtroy_vpn_server_hostname }}.{{ newtroy_vpn_internal_domain }}
+{% for user in users %}
+{{ vpn_network | ipaddr(loop.index + newtroy_network_client_offset) | ipaddr('address') }} {{ user }}.{{ newtroy_vpn_internal_domain }}
+{% endfor %}

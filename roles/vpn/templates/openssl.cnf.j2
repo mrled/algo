@@ -68,7 +68,7 @@ x509_extensions		= easyrsa_ca	# The extentions to add to the self signed cert
 [ cn_only ]
 commonName		= Common Name (eg: your user, host, or server name)
 commonName_max		= 64
-commonName_default	= {{ IP_subject_alt_name }}
+commonName_default	= {{ newtroy_server_cert_common_name }}
 
 # Easy-RSA DN for org support:
 [ org ]
@@ -91,7 +91,7 @@ organizationalUnitName_default	= My Organizational Unit
 
 commonName			= Common Name (eg: your user, host, or server name)
 commonName_max			= 64
-commonName_default		= {{ IP_subject_alt_name }}
+commonName_default		= {{ newtroy_server_cert_common_name }}
 
 emailAddress			= Email Address
 emailAddress_default		= me@example.net

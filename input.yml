@@ -23,6 +23,8 @@
       - { name: Install to existing Ubuntu 18.04 server (Advanced), alias: local }
   vars_files:
     - config.cfg
+    - config.newtroy.cfg
+    - config.newtroy.vault.cfg
 
   tasks:
     - pause:

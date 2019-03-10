@@ -6,6 +6,8 @@
   become: true
   vars_files:
     - config.cfg
+    - config.newtroy.cfg
+    - config.newtroy.vault.cfg
 
   roles:
     - role: common

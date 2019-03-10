@@ -7,13 +7,13 @@
 
   - name: Ensure the pki directory does not exist
     file:
-      dest: configs/{{ IP_subject_alt_name }}/pki
+      dest: {{ newtroy_server_configs }}/pki
       state: absent
     when: keys_clean_all|bool == True
 
   - name: Ensure the pki directories exist
     file:
-      dest: "configs/{{ IP_subject_alt_name }}/pki/{{ item }}"
+      dest: "{{ newtroy_server_configs }}/pki/{{ item }}"
       state: directory
       recurse: yes
       mode: '0700'
@@ -28,7 +28,7 @@
 
   - name: Ensure the files exist
     file:
-      dest: "configs/{{ IP_subject_alt_name }}/pki/{{ item }}"
+      dest: "{{ newtroy_server_configs }}/pki/{{ item }}"
       state: touch
     with_items:
       - ".rnd"
@@ -40,7 +40,7 @@
   - name: Generate the openssl server configs
     template:
       src: openssl.cnf.j2
-      dest: "configs/{{ IP_subject_alt_name }}/pki/openssl.cnf"
+      dest: "{{ newtroy_server_configs }}/pki/openssl.cnf"
 
   - name: Build the CA pair
     shell: >
@@ -53,22 +53,22 @@
       -out cacert.pem -x509 -days 3650
       -batch
       -passout pass:"{{ CA_password }}" &&
-      touch {{ IP_subject_alt_name }}_ca_generated
+      touch {{ newtroy_server_cert_common_name }}_ca_generated
     args:
-      chdir: "configs/{{ IP_subject_alt_name }}/pki/"
-      creates: "{{ IP_subject_alt_name }}_ca_generated"
+      chdir: "{{ newtroy_server_configs }}/pki/"
+      creates: "{{ newtroy_server_cert_common_name }}_ca_generated"
       executable: bash
 
   - name: Copy the CA certificate
     copy:
-      src: "configs/{{ IP_subject_alt_name }}/pki/cacert.pem"
-      dest: "configs/{{ IP_subject_alt_name }}/cacert.pem"
+      src: "{{ newtroy_server_configs }}/pki/cacert.pem"
+      dest: "{{ newtroy_server_configs }}/cacert.pem"
       mode: 0600
 
   - name: Generate the serial number
     shell: echo 01 > serial && touch serial_generated
     args:
-      chdir: "configs/{{ IP_subject_alt_name }}/pki/"
+      chdir: "{{ newtroy_server_configs }}/pki/"
       creates: serial_generated
 
   - name: Build the server pair
@@ -77,21 +77,21 @@
       {{ openssl_bin }} req -utf8 -new
       -newkey ec:ecparams/secp384r1.pem
       -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName={{ subjectAltName }}"))
-      -keyout private/{{ IP_subject_alt_name }}.key
-      -out reqs/{{ IP_subject_alt_name }}.req -nodes
+      -keyout private/{{ newtroy_server_cert_common_name }}.key
+      -out reqs/{{ newtroy_server_cert_common_name }}.req -nodes
       -passin pass:"{{ CA_password }}"
-      -subj "/CN={{ IP_subject_alt_name }}" -batch &&
+      -subj "/CN={{ newtroy_server_cert_common_name }}" -batch &&
       {{ openssl_bin }} ca -utf8
-      -in reqs/{{ IP_subject_alt_name }}.req
-      -out certs/{{ IP_subject_alt_name }}.crt
+      -in reqs/{{ newtroy_server_cert_common_name }}.req
+      -out certs/{{ newtroy_server_cert_common_name }}.crt
       -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName={{ subjectAltName }}"))
       -days 3650 -batch
       -passin pass:"{{ CA_password }}"
-      -subj "/CN={{ IP_subject_alt_name }}" &&
-      touch certs/{{ IP_subject_alt_name }}_crt_generated
+      -subj "/CN={{ newtroy_server_cert_common_name }}" &&
+      touch certs/{{ newtroy_server_cert_common_name }}_crt_generated
     args:
-      chdir: "configs/{{ IP_subject_alt_name }}/pki/"
-      creates: certs/{{ IP_subject_alt_name }}_crt_generated
+      chdir: "{{ newtroy_server_configs }}/pki/"
+      creates: certs/{{ newtroy_server_cert_common_name }}_crt_generated
       executable: bash
 
   - name: Build the client's pair
@@ -113,7 +113,7 @@
       -subj "/CN={{ item }}" &&
       touch certs/{{ item }}_crt_generated
     args:
-      chdir: "configs/{{ IP_subject_alt_name }}/pki/"
+      chdir: "{{ newtroy_server_configs }}/pki/"
       creates: certs/{{ item }}_crt_generated
       executable: bash
     with_items: "{{ users }}"
@@ -121,15 +121,15 @@
   - name: Create links for the private keys
     file:
       src: "pki/private/{{ item }}.key"
-      dest: "configs/{{ IP_subject_alt_name }}/{{ item }}.ssh.pem"
+      dest: "{{ newtroy_server_configs }}/{{ item }}.ssh.pem"
       state: link
       force: true
     with_items: "{{ users }}"
 
   - name: Build openssh public keys
     openssl_publickey:
-      path:  "configs/{{ IP_subject_alt_name }}/pki/public/{{ item }}.pub"
-      privatekey_path: "configs/{{ IP_subject_alt_name }}/pki/private/{{ item }}.key"
+      path:  "{{ newtroy_server_configs }}/pki/public/{{ item }}.pub"
+      privatekey_path: "{{ newtroy_server_configs }}/pki/private/{{ item }}.key"
       format: OpenSSH
     with_items: "{{ users }}"
 
@@ -144,15 +144,21 @@
       -out private/{{ item }}.p12
       -passout pass:"{{ p12_export_password }}"
     args:
-      chdir: "configs/{{ IP_subject_alt_name }}/pki/"
+      chdir: "{{ newtroy_server_configs }}/pki/"
       executable: bash
+    # NEWTROY: Do not recreate .p12 files if they already exist
+    # One downside here is that if you change the p12 password, they won't get regenerated
+    # For my purposes, I think that's ok/unsurprising, since I set the p12 password in the config
+    # Could theoretically test that the p12 has the same password or something,
+    # but I'm not sure it's worth doing that at this time.
+    creates: "private/{{ item }}.p12"
     with_items: "{{ users }}"
     register: p12
 
   - name: Copy the p12 certificates
     copy:
-      src: "configs/{{ IP_subject_alt_name }}/pki/private/{{ item }}.p12"
-      dest: "configs/{{ IP_subject_alt_name }}/{{ item }}.p12"
+      src: "{{ newtroy_server_configs }}/pki/private/{{ item }}.p12"
+      dest: "{{ newtroy_server_configs }}/{{ item }}.p12"
       mode: 0600
     with_items:
       - "{{ users }}"
@@ -160,11 +166,11 @@
   - name: Get active users
     shell: >
       grep ^V index.txt |
-      grep -v "{{ IP_subject_alt_name }}" |
+      grep -v "{{ newtroy_server_cert_common_name }}" |
       awk '{print $5}' |
       sed 's/\/CN=//g'
     args:
-      chdir: "configs/{{ IP_subject_alt_name }}/pki/"
+      chdir: "{{ newtroy_server_configs }}/pki/"
     register: valid_certs
 
   - name: Revoke non-existing users
@@ -176,7 +182,7 @@
       -out crl/{{ item }}.crt
     register: gencrl
     args:
-      chdir: configs/{{ IP_subject_alt_name }}/pki/
+      chdir: {{ newtroy_server_configs }}/pki/
       creates: crl/{{ item }}.crt
       executable: bash
     when: item not in users
@@ -185,14 +191,14 @@
   - name: Genereate new CRL file
     shell: >
       {{ openssl_bin }} ca -gencrl
-      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ IP_subject_alt_name }}"))
+      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ newtroy_server_cert_common_name }}"))
       -passin pass:"{{ CA_password }}"
       -out crl/algo.root.pem
     when:
       - gencrl is defined
       - gencrl.changed
     args:
-      chdir: configs/{{ IP_subject_alt_name }}/pki/
+      chdir: {{ newtroy_server_configs }}/pki/
       executable: bash
   delegate_to: localhost
   become: no
@@ -201,7 +207,7 @@
 
 - name: Copy the CRL to the vpn server
   copy:
-    src: configs/{{ IP_subject_alt_name }}/pki/crl/algo.root.pem
+    src: {{ newtroy_server_configs }}/pki/crl/algo.root.pem
     dest: "{{ config_prefix|default('/') }}etc/ipsec.d/crls/algo.root.pem"
   when:
     - gencrl is defined

@@ -43,18 +43,18 @@
     shell: cat private/{{ item }}.p12 | base64
     register:  PayloadContent
     args:
-      chdir: "../configs/{{ IP_subject_alt_name }}/pki/"
+      chdir: "../{{ newtroy_server_configs }}/pki/"
     with_items: "{{ users }}"
 
   - name: Set facts for mobileconfigs
     set_fact:
       proxy_enabled: false
-      PayloadContentCA: "{{ lookup('file' , '../configs/{{ IP_subject_alt_name }}/pki/cacert.pem')|b64encode }}"
+      PayloadContentCA: "{{ lookup('file' , '../{{ newtroy_server_configs }}/pki/cacert.pem')|b64encode }}"
 
   - name: Build the windows client powershell script
     template:
       src: ../roles/vpn/templates/client_windows.ps1.j2
-      dest: ../configs/{{ IP_subject_alt_name }}/windows_{{ item.0 }}.ps1
+      dest: ../{{ newtroy_server_configs }}/windows_{{ item.0 }}.ps1
       mode: 0600
     with_together:
       - "{{ users }}"
@@ -62,6 +62,6 @@
 
   - name: List windows client powershell scripts
     debug:
-      msg: "configs/{{ IP_subject_alt_name }}/windows_{{ item }}.ps1"
+      msg: "{{ newtroy_server_configs }}/windows_{{ item }}.ps1"
     with_items:
       - "{{ users }}"

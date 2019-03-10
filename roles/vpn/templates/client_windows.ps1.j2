@@ -84,8 +84,8 @@ Save the embedded CA cert and encrypted user PKCS12 file.
 
 $ErrorActionPreference = "Stop"
 
-$VpnServerAddress = "{{ IP_subject_alt_name }}"
-$VpnName = "Algo VPN {{ IP_subject_alt_name }} IKEv2"
+$VpnServerAddress = "{{ newtroy_server_cert_common_name }}"
+$VpnName = "Algo VPN {{ newtroy_server_cert_common_name }} IKEv2"
 $VpnUser = "{{ item.0 }}"
 $CaCertificateBase64 = "{{ PayloadContentCA }}"
 $UserPkcs12Base64 = "{{ item.1.stdout }}"

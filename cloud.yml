@@ -4,6 +4,8 @@
   tags: always
   vars_files:
     - config.cfg
+    - config.newtroy.cfg
+    - config.newtroy.vault.cfg
 
   pre_tasks:
     - block:
@@ -17,6 +19,11 @@
           tags: always
 
   roles:
+    # Run this role first to set client IP addresses early
+    # TODO: Switch away from old-style tags for new-style vars
+    - role: dns_vpn_internal_network_route53
+      tags: ['dns_vpn_internal_network_route53']
+
     - role: cloud-digitalocean
       when: algo_provider == "digitalocean"
     - role: cloud-ec2
@@ -35,6 +42,12 @@
       when: algo_provider == "openstack"
     - role: local
       when: algo_provider == "local"
+
+    # Ensure this role comes after the deployment -
+    # it relies on the VPN server being deployed
+    # TODO: Switch away from old-style tags for new-style vars
+    - role: dns_vpn_server_route53
+      tags: ['dns_vpn_server_route53'] }
 
   post_tasks:
     - block:
