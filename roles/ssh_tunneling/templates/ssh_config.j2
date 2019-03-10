@@ -4,4 +4,4 @@ Host algo
   Compression yes
   IdentityFile {{ item }}.ssh.pem
   User {{ item }}
-  Hostname {{ newtroy_server_cert_common_name }}
+  Hostname {{ IP_subject_alt_name }}

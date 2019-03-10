@@ -100,11 +100,11 @@
                 <key>CertificateType</key>
                 <string>ECDSA384</string>
                 <key>ServerCertificateIssuerCommonName</key>
-                <string>{{ newtroy_server_cert_common_name }}</string>
+                <string>{{ IP_subject_alt_name }}</string>
                 <key>RemoteAddress</key>
-                <string>{{ newtroy_server_cert_common_name }}</string>
+                <string>{{ IP_subject_alt_name }}</string>
                 <key>RemoteIdentifier</key>
-                <string>{{ newtroy_server_cert_common_name }}</string>
+                <string>{{ IP_subject_alt_name }}</string>
                 <key>UseConfigurationAttributeInternalIPSubnet</key>
                 <integer>0</integer>
             </dict>
@@ -133,7 +133,7 @@
                 <integer>0</integer>
             </dict>
             <key>UserDefinedName</key>
-            <string>Algo VPN {{ newtroy_server_cert_common_name }} IKEv2</string>
+            <string>Algo VPN {{ IP_subject_alt_name }} IKEv2</string>
             <key>VPNType</key>
             <string>IKEv2</string>
         </dict>
@@ -169,7 +169,7 @@
             <key>PayloadDescription</key>
             <string>Adds a CA root certificate</string>
             <key>PayloadDisplayName</key>
-            <string>{{ newtroy_server_cert_common_name }}</string>
+            <string>{{ IP_subject_alt_name }}</string>
             <key>PayloadIdentifier</key>
             <string>com.apple.security.root.{{ CA_PayloadIdentifier }}</string>
             <key>PayloadType</key>
@@ -181,9 +181,9 @@
         </dict>
     </array>
     <key>PayloadDisplayName</key>
-    <string>{{ newtroy_server_cert_common_name }} IKEv2</string>
+    <string>{{ IP_subject_alt_name }} IKEv2</string>
     <key>PayloadIdentifier</key>
-    <string>donut.local.{{ 'MobileConfig_PayloadIdentifier' + item.0 | newtroy_nbuuid(newtroy_this_server_namespace) }}</string>
+    <string>donut.local.{{ 500000 | random | to_uuid | upper }}</string>
     <key>PayloadOrganization</key>
 	<string>Algo VPN</string>
     <key>PayloadRemovalDisallowed</key>
@@ -191,7 +191,7 @@
     <key>PayloadType</key>
     <string>Configuration</string>
     <key>PayloadUUID</key>
-    <string>{{ 'MobileConfig_PayloadUUID' + item.0 | newtroy_nbuuid(newtroy_this_server_namespace) }}</string>
+    <string>{{ 400000 | random | to_uuid | upper }}</string>
     <key>PayloadVersion</key>
     <integer>1</integer>
 </dict>

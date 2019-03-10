@@ -1,4 +1,4 @@
-conn ikev2-{{ newtroy_server_cert_common_name }}
+conn ikev2-{{ IP_subject_alt_name }}
     fragmentation=yes
     rekey=no
     dpdaction=clear
@@ -14,14 +14,13 @@ conn ikev2-{{ newtroy_server_cert_common_name }}
     esp={{ ciphers.defaults.esp }}
 {% endif %}
 
-    right={{ newtroy_server_cert_common_name }}
-    rightid={{ newtroy_server_cert_common_name }}
+    right={{ IP_subject_alt_name }}
+    rightid={{ IP_subject_alt_name }}
     rightsubnet=0.0.0.0/0
     rightauth=pubkey
 
     leftsourceip=%config
     leftauth=pubkey
-    leftid={{ item }}
     leftcert={{ item }}.crt
     leftfirewall=yes
     left=%defaultroute

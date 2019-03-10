@@ -41,7 +41,7 @@
     - name: The authorized keys file created
       authorized_key:
         user: "{{ item }}"
-        key: "{{ lookup('file', newtroy_server_configs + '/pki/public/' + item + '.pub') }}"
+        key: "{{ lookup('file', 'configs/' + IP_subject_alt_name + '/pki/public/' + item + '.pub') }}"
         state: present
         manage_dir: true
         exclusive: true
@@ -49,23 +49,21 @@
       tags: update-users
 
     - name: Generate SSH fingerprints
-      # NEWTROY: sort these so that they are in the same order every time
-      # This eliminates churn from the encrypted configs archive
-      shell: ssh-keyscan {{ newtroy_server_cert_common_name }} 2>/dev/null | sort
+      shell: ssh-keyscan {{ IP_subject_alt_name }} 2>/dev/null
       register: ssh_fingerprints
 
     - name: Fetch the known_hosts file
       local_action:
         module: template
         src: known_hosts.j2
-        dest: "{{ newtroy_server_configs }}/known_hosts"
+        dest: configs/{{ IP_subject_alt_name }}/known_hosts
       become: no
 
     - name: Build the client ssh config
       local_action:
         module: template
         src: ssh_config.j2
-        dest: "{{ newtroy_server_configs }}/{{ item }}.ssh_config"
+        dest: configs/{{ IP_subject_alt_name }}/{{ item }}.ssh_config
         mode: 0600
       become: false
       tags: update-users

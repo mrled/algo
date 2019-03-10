@@ -1,5 +1,5 @@
 config setup
-    uniqueids=replace  # if the same user connects twice, replace the old connection with the new one
+    uniqueids=never # allow multiple connections per user
     charondebug="ike {{ strongswan_log_level }}, knl {{ strongswan_log_level }}, cfg {{ strongswan_log_level }}, net {{ strongswan_log_level }}, esp {{ strongswan_log_level }}, dmn {{ strongswan_log_level }},  mgr {{ strongswan_log_level }}"
 
 conn %default
@@ -20,33 +20,19 @@ conn %default
 
     left=%any
     leftauth=pubkey
-    leftid={{ newtroy_server_cert_common_name }}
-    leftcert={{ newtroy_server_cert_common_name }}.crt
+    leftid={{ IP_subject_alt_name }}
+    leftcert={{ IP_subject_alt_name }}.crt
     leftsendcert=always
     leftsubnet=0.0.0.0/0,::/0
 
     right=%any
     rightauth=pubkey
+    rightsourceip={{ vpn_network }},{{ vpn_network_ipv6 }}
 {% if algo_local_dns or dns_encryption %}
     rightdns={{ local_service_ip }}
 {% else %}
     rightdns={% for host in dns_servers.ipv4 %}{{ host }}{% if not loop.last %},{% endif %}{% endfor %}{% if ipv6_support %},{% for host in dns_servers.ipv6 %}{{ host }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
 {% endif %}
 
-# Client configs
-# example: https://www.strongswan.org/testing/testresults/ikev2/config-payload/, especially moon.ipsec.conf
-# Note that each user gets _two_ conn stanzas, because some operating systems submit their ID as
-# the bare 'CommonName' of their cert, and some submit it as ASN.1-encoded '/CN=CommonName'
-
-{% for user in users %}
-
-conn AlgoUser-{{ user }}
-    rightid={{ user }}
-    rightsourceip={{ vpn_network | ipaddr(loop.index + newtroy_network_client_offset) | ipaddr('address') }}
+conn ikev2-pubkey
     auto=add
-conn AlgoUser-CN{{ user }}
-    rightid="/CN={{ user }}"
-    rightsourceip={{ vpn_network | ipaddr(loop.index + newtroy_network_client_offset) | ipaddr('address') }}
-    auto=add
-
-{% endfor %}
