@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 ## WARNING: This is written for Python 2.7 because that is what Algo uses, rolleyes
 
@@ -111,26 +111,26 @@ def activate_venv(venvpath):
 
     Note that this will remain activated for subprocesses
     """
-    if sys.prefix != venvpath:
-        if hasattr(sys, 'real_prefix'):
-            real_prefix = sys.real_prefix  # pylint: disable=E1101
-            LOGGER.warning(" ".join([
-                "Will activate venv at {}, ".format(venvpath),
-                "but there was an already activated venv at {}; ".format(real_prefix),
-                "if you have problems, consider deactivating that environment in your shell"]))
+    if sys.prefix == venvpath:
+        return
 
-        # Based on instructions found in the activate_this.py on my system
+    if hasattr(sys, 'real_prefix'):
+        real_prefix = sys.real_prefix  # pylint: disable=E1101
+        LOGGER.warning(" ".join([
+            "Will activate venv at {}, ".format(venvpath),
+            "but there was an already activated venv at {}; ".format(sys.prefix),
+            "if you have problems, consider deactivating that environment in your shell"]))
 
-        activate_this = "{}/bin/activate_this.py".format(venvpath)
-        newglobals = dict(__file__=activate_this)
-
-        try:
-            execfile(activate_this, newglobals)
-        except NameError:
-            # python3 does not have execfile()
-            # See also https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3#437857
-            with open(activate_this) as f:
-                exec(compile(f.read(), activate_this, 'exec'), newglobals)
+    # Based on instructions found in the activate_this.py on my system
+    activate_this = "{}/bin/activate_this.py".format(venvpath)
+    newglobals = dict(__file__=activate_this)
+    try:
+        execfile(activate_this, newglobals)
+    except NameError:
+        # python3 does not have execfile()
+        # See also https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3#437857
+        with open(activate_this) as f:
+            exec(compile(f.read(), activate_this, 'exec'), newglobals)
 
 
 def encrypt_configs(encrypted, decrypted, recipient, overwrite=False):
@@ -181,8 +181,9 @@ def test_empty_config(configdir):
     """
     if os.path.exists(configdir):
         for child in os.listdir(configdir):
-            if child.startswith("."):
-                return False
+            if child == ".gitinit":
+                continue
+            return False
     return True
 
 
@@ -328,13 +329,13 @@ def postdeploy_prep_configs(encrypted, decrypted, recipient):
             "and encrypted archive at {}; will not recreate encrypted archive".format(encrypted)]))
 
 
-def deploy(environment):
+def deploy(environment, verbose=False):
     """Deploy Algo
     """
 
     # Arguments for all environments
     varsfiles = [
-        'config.newtroy.vault.cfg'
+        'config.newtroy.vault.cfg',
         'config.newtroy.cfg',
     ]
     tags = []
@@ -355,7 +356,10 @@ def deploy(environment):
     else:
         raise Exception("Invalid environment name")
 
-    command = ['ansible-playbook', 'main.yml', '-t', ','.join(tags)]
+    command = ['ansible-playbook', 'main.yml']
+    if verbose:
+        command += ['-vv']
+    command += ['-t', ','.join(tags)]
     for varsfile in varsfiles:
         command += ['-e', '@{}'.format(varsfile)]
     LOGGER.info("Deploying Algo with command: {}".format(' '.join(command)))
@@ -393,6 +397,8 @@ def main(*args, **kwargs):  # pylint: disable=W0613
     parser.add_argument(
         '--debug', '-d', action='store_true', help='Enable debugging')
     parser.add_argument(
+        '--verbose', '-v', action='store_true', help='Enable verbose messages')
+    parser.add_argument(
         '--configs-path', '-c',
         default=resolvepath('configs'), type=resolvepath,
         help='The path to the Algo configs directory')
@@ -405,12 +411,10 @@ def main(*args, **kwargs):  # pylint: disable=W0613
         default="conspirator@PSYOPS",
         help='The recipient for GPG encryption. You probably do not want to change this.')
     parser.add_argument(
-        '--venv-path', '-v',
-        default=resolvepath('env.PSYOPS'), type=resolvepath,
+        '--venv-path', default=resolvepath('env'), type=resolvepath,
         help=(
             'The location of the virtual environment. '
-            'Used regardless of whether it is activated in your shell. '
-            'If it does not exist, it will be created.'))
+            'Used regardless of whether it is activated in your shell. '))
 
     subparsers = parser.add_subparsers(dest='action')
 
@@ -435,16 +439,20 @@ def main(*args, **kwargs):  # pylint: disable=W0613
 
     parsed = parser.parse_args()
 
+    verbose_ansible = False
+    if parsed.verbose:
+        verbose_ansible = True
     if parsed.debug:
         LOGGER.setLevel(logging.DEBUG)
         sys.excepthook = debugexchandler
+        verbose_ansible = True
 
     activate_venv(parsed.venv_path)
 
     try:
         if parsed.action == 'deploy':
             predeploy_prep_configs(parsed.encrypted_configs, parsed.configs_path)
-            deploy(parsed.environment)
+            deploy(parsed.environment, verbose=verbose_ansible)
             postdeploy_prep_configs(
                 parsed.encrypted_configs,
                 parsed.configs_path,

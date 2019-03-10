@@ -1,0 +1,19 @@
+- name: Provision Route53 DNS
+  hosts: localhost
+  tags: always
+
+  # Include same vars as the upstream algo playbooks do
+  # Pass in any extra vars files on the command line
+  vars_files:
+    - config.cfg
+
+  roles:
+
+    # Run this role first to set client IP addresses early
+    - role: dns_vpn_internal_network_route53
+      tags: ['dns_vpn_internal_network_route53']
+
+    # Ensure this role comes after the deployment -
+    # it relies on the VPN server being deployed
+    - role: dns_vpn_server_route53
+      tags: ['dns_vpn_server_route53']

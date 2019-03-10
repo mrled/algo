@@ -1,1 +1,4 @@
+---
+
+ec2_venv: "{{ playbook_dir }}/configs/.venvs/aws"
 route53_stack_name: "{{ aws_server_name | replace('.', '-') }}-route53-zone"

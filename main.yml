@@ -5,5 +5,8 @@
 - name: Include cloud provisioning playbook
   import_playbook: cloud.yml
 
+- name: Include newtroy Route53 playbook
+  import_playbook: newtroy-route53.yml
+
 - name: Include server configuration playbook
   import_playbook: server.yml

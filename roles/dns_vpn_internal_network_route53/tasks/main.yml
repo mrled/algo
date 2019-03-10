@@ -2,6 +2,9 @@
 
 - block:
 
+  - name: Build python virtual environment
+    import_tasks: venv.yml
+
   - name: Generate Route53 CloudFormation template
     template:
       src: stack.yml.j2
@@ -20,6 +23,8 @@
       tags:
         Environment: Algo
     register: stack
+    environment:
+      PYTHONPATH: "{{ ec2_venv }}/lib/python2.7/site-packages/"
 
   when:
   - newtroy_vpn_internal_domain is defined
