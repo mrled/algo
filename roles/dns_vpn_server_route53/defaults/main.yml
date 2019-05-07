@@ -1,6 +1,6 @@
 ---
 
-ec2_venv: "{{ playbook_dir }}/configs/.venvs/aws"
+ec2_venv: "{{ newtroy_venvs_dir }}/aws"
 
 # WARNING: This relies on the current behavior of upstream algo
 #

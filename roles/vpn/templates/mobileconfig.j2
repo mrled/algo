@@ -100,11 +100,11 @@
                 <key>CertificateType</key>
                 <string>ECDSA384</string>
                 <key>ServerCertificateIssuerCommonName</key>
-                <string>{{ IP_subject_alt_name }}</string>
+                <string>{{ newtroy_vpn_server_fqdn }}</string>
                 <key>RemoteAddress</key>
-                <string>{{ IP_subject_alt_name }}</string>
+                <string>{{ newtroy_vpn_server_fqdn }}</string>
                 <key>RemoteIdentifier</key>
-                <string>{{ IP_subject_alt_name }}</string>
+                <string>{{ newtroy_vpn_server_fqdn }}</string>
                 <key>UseConfigurationAttributeInternalIPSubnet</key>
                 <integer>0</integer>
             </dict>
@@ -133,7 +133,7 @@
                 <integer>0</integer>
             </dict>
             <key>UserDefinedName</key>
-            <string>Algo VPN {{ IP_subject_alt_name }} IKEv2</string>
+            <string>Algo VPN {{ newtroy_vpn_server_fqdn }} IKEv2</string>
             <key>VPNType</key>
             <string>IKEv2</string>
         </dict>
@@ -169,7 +169,7 @@
             <key>PayloadDescription</key>
             <string>Adds a CA root certificate</string>
             <key>PayloadDisplayName</key>
-            <string>{{ IP_subject_alt_name }}</string>
+            <string>{{ newtroy_vpn_server_fqdn }}</string>
             <key>PayloadIdentifier</key>
             <string>com.apple.security.root.{{ CA_PayloadIdentifier }}</string>
             <key>PayloadType</key>
@@ -181,7 +181,7 @@
         </dict>
     </array>
     <key>PayloadDisplayName</key>
-    <string>{{ IP_subject_alt_name }} IKEv2</string>
+    <string>{{ newtroy_vpn_server_fqdn }} IKEv2</string>
     <key>PayloadIdentifier</key>
     <string>donut.local.{{ 'MobileConfig_PayloadIdentifier' + item.0 | newtroy_nbuuid(newtroy_this_server_namespace) }}</string>
     <key>PayloadOrganization</key>

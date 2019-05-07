@@ -1,4 +1,4 @@
-conn ikev2-{{ IP_subject_alt_name }}
+conn ikev2-{{ newtroy_vpn_server_fqdn }}
     fragmentation=yes
     rekey=no
     dpdaction=clear
@@ -14,8 +14,8 @@ conn ikev2-{{ IP_subject_alt_name }}
     esp={{ ciphers.defaults.esp }}
 {% endif %}
 
-    right={{ IP_subject_alt_name }}
-    rightid={{ IP_subject_alt_name }}
+    right={{ newtroy_vpn_server_fqdn }}
+    rightid={{ newtroy_vpn_server_fqdn }}
     rightsubnet=0.0.0.0/0
     rightauth=pubkey
 

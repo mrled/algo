@@ -6,7 +6,7 @@ DNS = {{ wireguard_dns_servers }}
 {% endif %}
 
 [Peer]
-PublicKey = {{ lookup('file', wireguard_config_path + '/public/' + IP_subject_alt_name) }}
+PublicKey = {{ lookup('file', wireguard_config_path + '/public/' + newtroy_vpn_server_fqdn) }}
 AllowedIPs = 0.0.0.0/0, ::/0
-Endpoint = {{ IP_subject_alt_name }}:{{ wireguard_port }}
+Endpoint = {{ newtroy_vpn_server_fqdn }}:{{ wireguard_port }}
 {{ 'PersistentKeepalive = ' + wireguard_PersistentKeepalive|string if wireguard_PersistentKeepalive > 0 else '' }}

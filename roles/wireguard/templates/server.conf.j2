@@ -1,7 +1,7 @@
 [Interface]
 Address = {{ wireguard_server_ip }}
 ListenPort = {{ wireguard_port }}
-PrivateKey = {{ lookup('file', wireguard_config_path + '/private/' + IP_subject_alt_name) }}
+PrivateKey = {{ lookup('file', wireguard_config_path + '/private/' + newtroy_vpn_server_fqdn) }}
 SaveConfig = false
 
 {% for u in wireguard_users %}

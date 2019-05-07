@@ -13,13 +13,13 @@
       owner: strongswan
       group: "{{ root_group|default('root') }}"
       mode: "0600"
-    - src: "{{ newtroy_config_dir }}/pki/certs/{{ IP_subject_alt_name }}.crt"
-      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/certs/{{ IP_subject_alt_name }}.crt"
+    - src: "{{ newtroy_config_dir }}/pki/certs/{{ newtroy_vpn_server_fqdn }}.crt"
+      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/certs/{{ newtroy_vpn_server_fqdn }}.crt"
       owner: strongswan
       group: "{{ root_group|default('root') }}"
       mode: "0600"
-    - src: "{{ newtroy_config_dir }}/pki/private/{{ IP_subject_alt_name }}.key"
-      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/private/{{ IP_subject_alt_name }}.key"
+    - src: "{{ newtroy_config_dir }}/pki/private/{{ newtroy_vpn_server_fqdn }}.key"
+      dest: "{{ config_prefix|default('/') }}etc/ipsec.d/private/{{ newtroy_vpn_server_fqdn }}.key"
       owner: strongswan
       group: "{{ root_group|default('root') }}"
       mode: "0600"

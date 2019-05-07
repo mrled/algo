@@ -26,19 +26,6 @@
 
   tasks:
 
-  - name: Get config subdir
-    shell: find ../configs/* -maxdepth 0 -type d | sed 's/.*\///'
-    register: config_subdir_result
-  - fail:
-      msg:
-        - "Found wrong number of config subdirs... stdout:"
-        - "{{ config_subdir_result.split('\n') }}"
-    when: config_subdir_result.stdout.split('\n') | length != 1
-  - set_fact:
-      IP_subject_alt_name: "{{ config_subdir_result.stdout }}"
-  - debug:
-      var: IP_subject_alt_name
-
   - name: Register p12 PayloadContent
     shell: cat private/{{ item }}.p12 | base64
     register:  PayloadContent

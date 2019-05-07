@@ -15,7 +15,7 @@
 - name: Setup the ipsec config
   template:
     src: "roles/vpn/templates/client_ipsec.conf.j2"
-    dest: "{{ configs_prefix }}/ipsec.{{ IP_subject_alt_name }}.conf"
+    dest: "{{ configs_prefix }}/ipsec.{{ newtroy_vpn_server_fqdn }}.conf"
     mode: '0644'
   with_items:
     - "{{ vpn_user }}"
@@ -25,7 +25,7 @@
 - name: Setup the ipsec secrets
   template:
     src: "roles/vpn/templates/client_ipsec.secrets.j2"
-    dest: "{{ configs_prefix }}/ipsec.{{ IP_subject_alt_name }}.secrets"
+    dest: "{{ configs_prefix }}/ipsec.{{ newtroy_vpn_server_fqdn }}.secrets"
     mode: '0600'
   with_items:
     - "{{ vpn_user }}"
@@ -39,9 +39,9 @@
     create: yes
   with_items:
     - dest: "{{ configs_prefix }}/ipsec.conf"
-      line: "include ipsec.{{ IP_subject_alt_name }}.conf"
+      line: "include ipsec.{{ newtroy_vpn_server_fqdn }}.conf"
     - dest: "{{ configs_prefix }}/ipsec.secrets"
-      line: "include ipsec.{{ IP_subject_alt_name }}.secrets"
+      line: "include ipsec.{{ newtroy_vpn_server_fqdn }}.secrets"
   notify:
     - restart strongswan
 
@@ -53,7 +53,7 @@
     - src: "{{ newtroy_config_dir }}/pki/certs/{{ vpn_user }}.crt"
       dest: "{{ configs_prefix }}/ipsec.d/certs/{{ vpn_user }}.crt"
     - src: "{{ newtroy_config_dir }}/pki/cacert.pem"
-      dest: "{{ configs_prefix }}/ipsec.d/cacerts/{{ IP_subject_alt_name }}.pem"
+      dest: "{{ configs_prefix }}/ipsec.d/cacerts/{{ newtroy_vpn_server_fqdn }}.pem"
     - src: "{{ newtroy_config_dir }}/pki/private/{{ vpn_user }}.key"
       dest: "{{ configs_prefix }}/ipsec.d/private/{{ vpn_user }}.key"
   notify:

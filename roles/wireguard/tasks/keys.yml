@@ -6,7 +6,7 @@
   when: keys_clean_all|bool == True
   with_items:
     - "{{ users }}"
-    - "{{ IP_subject_alt_name }}"
+    - "{{ newtroy_vpn_server_fqdn }}"
 
 - name: Generate private keys
   command: wg genkey
@@ -15,7 +15,7 @@
     creates: "{{ config_prefix|default('/') }}etc/wireguard/private_{{ item }}.lock"
   with_items:
     - "{{ users }}"
-    - "{{ IP_subject_alt_name }}"
+    - "{{ newtroy_vpn_server_fqdn }}"
 
 - block:
   - name: Save private keys
@@ -35,7 +35,7 @@
       state: touch
     with_items:
       - "{{ users }}"
-      - "{{ IP_subject_alt_name }}"
+      - "{{ newtroy_vpn_server_fqdn }}"
   when: wg_genkey.changed
 
 - name: Generate public keys
@@ -46,7 +46,7 @@
     executable: bash
   with_items:
     - "{{ users }}"
-    - "{{ IP_subject_alt_name }}"
+    - "{{ newtroy_vpn_server_fqdn }}"
 
 - name: Save public keys
   copy:

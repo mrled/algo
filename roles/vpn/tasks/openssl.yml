@@ -53,10 +53,10 @@
       -out cacert.pem -x509 -days 3650
       -batch
       -passout pass:"{{ CA_password }}" &&
-      touch {{ IP_subject_alt_name }}_ca_generated
+      touch {{ newtroy_vpn_server_fqdn }}_ca_generated
     args:
       chdir: "{{ newtroy_config_dir }}/pki/"
-      creates: "{{ IP_subject_alt_name }}_ca_generated"
+      creates: "{{ newtroy_vpn_server_fqdn }}_ca_generated"
       executable: bash
 
   - name: Copy the CA certificate
@@ -77,21 +77,21 @@
       {{ openssl_bin }} req -utf8 -new
       -newkey ec:ecparams/secp384r1.pem
       -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName={{ subjectAltName }}"))
-      -keyout private/{{ IP_subject_alt_name }}.key
-      -out reqs/{{ IP_subject_alt_name }}.req -nodes
+      -keyout private/{{ newtroy_vpn_server_fqdn }}.key
+      -out reqs/{{ newtroy_vpn_server_fqdn }}.req -nodes
       -passin pass:"{{ CA_password }}"
-      -subj "/CN={{ IP_subject_alt_name }}" -batch &&
+      -subj "/CN={{ newtroy_vpn_server_fqdn }}" -batch &&
       {{ openssl_bin }} ca -utf8
-      -in reqs/{{ IP_subject_alt_name }}.req
-      -out certs/{{ IP_subject_alt_name }}.crt
+      -in reqs/{{ newtroy_vpn_server_fqdn }}.req
+      -out certs/{{ newtroy_vpn_server_fqdn }}.crt
       -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName={{ subjectAltName }}"))
       -days 3650 -batch
       -passin pass:"{{ CA_password }}"
-      -subj "/CN={{ IP_subject_alt_name }}" &&
-      touch certs/{{ IP_subject_alt_name }}_crt_generated
+      -subj "/CN={{ newtroy_vpn_server_fqdn }}" &&
+      touch certs/{{ newtroy_vpn_server_fqdn }}_crt_generated
     args:
       chdir: "{{ newtroy_config_dir }}/pki/"
-      creates: certs/{{ IP_subject_alt_name }}_crt_generated
+      creates: certs/{{ newtroy_vpn_server_fqdn }}_crt_generated
       executable: bash
 
   - name: Build the client's pair
@@ -160,7 +160,7 @@
   - name: Get active users
     shell: >
       grep ^V index.txt |
-      grep -v "{{ IP_subject_alt_name }}" |
+      grep -v "{{ newtroy_vpn_server_fqdn }}" |
       awk '{print $5}' |
       sed 's/\/CN=//g'
     args:
@@ -185,7 +185,7 @@
   - name: Genereate new CRL file
     shell: >
       {{ openssl_bin }} ca -gencrl
-      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ IP_subject_alt_name }}"))
+      -config <(cat openssl.cnf <(printf "[basic_exts]\nsubjectAltName=DNS:{{ newtroy_vpn_server_fqdn }}"))
       -passin pass:"{{ CA_password }}"
       -out crl/algo.root.pem
     when:

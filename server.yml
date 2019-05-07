@@ -34,10 +34,10 @@
       # This happens in cloud-post.yml as of 20190309
       # Hopefully upstream will fix this?
       # TODO: test that this really is an upstream bug and then file one with them
-      - name: Manhandle IP_subject_alt_name
-        set_fact:
-          IP_subject_alt_name: "{{ endpoint }}"
-      - debug: msg="New IP_subject_alt_name - {{ IP_subject_alt_name }}"
+      # - name: Manhandle IP_subject_alt_name
+      #   set_fact:
+      #     IP_subject_alt_name: "{{ endpoint }}"
+      # - debug: msg="New IP_subject_alt_name - {{ IP_subject_alt_name }}"
 
       - name: Delete the CA key
         local_action:
