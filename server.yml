@@ -42,7 +42,7 @@
       - name: Delete the CA key
         local_action:
           module: file
-          path: "configs/{{ IP_subject_alt_name }}/pki/private/cakey.pem"
+          path: "{{ newtroy_config_dir }}/pki/private/cakey.pem"
           state: absent
         become: false
         when: not algo_store_cakey
@@ -50,7 +50,7 @@
       - name: Dump the configuration
         local_action:
           module: copy
-          dest: "configs/{{ IP_subject_alt_name }}/config.yml"
+          dest: "{{ newtroy_config_dir }}/config.yml"
           content: |
             server: {{ 'localhost' if inventory_hostname == 'localhost' else inventory_hostname }}
             server_user: {{ ansible_ssh_user }}

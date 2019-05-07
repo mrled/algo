@@ -4,17 +4,17 @@
   shell: cat private/{{ item }}.p12 | base64
   register:  PayloadContent
   args:
-    chdir: "configs/{{ IP_subject_alt_name }}/pki/"
+    chdir: "{{ newtroy_config_dir }}/pki/"
   with_items: "{{ users }}"
 
 - name: Set facts for mobileconfigs
   set_fact:
-    PayloadContentCA: "{{ lookup('file' , 'configs/{{ IP_subject_alt_name }}/pki/cacert.pem')|b64encode }}"
+    PayloadContentCA: "{{ lookup('file' , '{{ newtroy_config_dir }}/pki/cacert.pem')|b64encode }}"
 
 - name: Build the mobileconfigs
   template:
     src: mobileconfig.j2
-    dest: configs/{{ IP_subject_alt_name }}/{{ item.0 }}.mobileconfig
+    dest: "{{ newtroy_config_dir }}/{{ item.0 }}.mobileconfig"
     mode: 0600
   with_together:
     - "{{ users }}"
@@ -24,7 +24,7 @@
 - name: Build the client ipsec config file
   template:
     src: client_ipsec.conf.j2
-    dest: configs/{{ IP_subject_alt_name }}/ipsec_{{ item }}.conf
+    dest: "{{ newtroy_config_dir }}/ipsec_{{ item }}.conf"
     mode: 0600
   with_items:
     - "{{ users }}"
@@ -32,7 +32,7 @@
 - name: Build the client ipsec secret file
   template:
     src: client_ipsec.secrets.j2
-    dest: configs/{{ IP_subject_alt_name }}/ipsec_{{ item }}.secrets
+    dest: "{{ newtroy_config_dir }}/ipsec_{{ item }}.secrets"
     mode: 0600
   with_items:
     - "{{ users }}"
@@ -40,7 +40,7 @@
 - name: Build the windows client powershell script
   template:
     src: client_windows.ps1.j2
-    dest: configs/{{ IP_subject_alt_name }}/windows_{{ item.0 }}.ps1
+    dest: "{{ newtroy_config_dir }}/windows_{{ item.0 }}.ps1"
     mode: 0600
   when: algo_windows
   with_together:
@@ -53,4 +53,4 @@
     state: directory
     mode: 0700
   with_items:
-    - configs/{{ IP_subject_alt_name }}
+    - "{{ newtroy_config_dir }}"

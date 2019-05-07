@@ -56,14 +56,14 @@
       local_action:
         module: template
         src: known_hosts.j2
-        dest: configs/{{ IP_subject_alt_name }}/known_hosts
+        dest: "{{ newtroy_config_dir }}/known_hosts"
       become: no
 
     - name: Build the client ssh config
       local_action:
         module: template
         src: ssh_config.j2
-        dest: configs/{{ IP_subject_alt_name }}/{{ item }}.ssh_config
+        dest: "{{ newtroy_config_dir }}/{{ item }}.ssh_config"
         mode: 0600
       become: false
       tags: update-users

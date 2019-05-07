@@ -50,6 +50,10 @@ Generates this list, which I've migrated:
 
 ## Other notes
 
+Fix `configs/{{ IP_subject_alt_name }}` -> `{{ newtroy_config_dir }}` with macOS sed with:
+
+	find . -type f -name '*.yml' -exec sed -i '' 's/configs\/{{ IP_subject_alt_name }}/{{ newtroy_config_dir }}/g' {} \;
+
 ## Other other notes
 
 - use vars instead of tags for my custom roles in cloud.yml, mimmicking new algo pattern
