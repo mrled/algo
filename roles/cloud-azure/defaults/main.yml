@@ -1,5 +1,5 @@
 ---
-azure_venv: "{{ playbook_dir }}/configs/.venvs/azure"
+azure_venv: "{{ newtroy_venvs_dir }}/azure"
 _azure_regions: >
   [
     {

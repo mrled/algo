@@ -1,2 +1,2 @@
 ---
-gce_venv: "{{ playbook_dir }}/configs/.venvs/gce"
+gce_venv: "{{ newtroy_venvs_dir }}/gce"

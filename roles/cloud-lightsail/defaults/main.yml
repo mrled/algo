@@ -1,2 +1,2 @@
 ---
-lightsail_venv: "{{ playbook_dir }}/configs/.venvs/aws"
+lightsail_venv: "{{ newtroy_venvs_dir }}/aws"

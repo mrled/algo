@@ -1,2 +1,2 @@
 ---
-openstack_venv: "{{ playbook_dir }}/configs/.venvs/openstack"
+openstack_venv: "{{ newtroy_venvs_dir }}/openstack"

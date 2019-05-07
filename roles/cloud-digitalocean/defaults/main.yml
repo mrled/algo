@@ -1,2 +1,2 @@
 ---
-digitalocean_venv: "{{ playbook_dir }}/configs/.venvs/digitalocean"
+digitalocean_venv: "{{ newtroy_venvs_dir }}/digitalocean"
