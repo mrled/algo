@@ -286,6 +286,7 @@ def predeploy_prep_configs(encrypted, decrypted):
     If they do not, raise a MismatchedConfigsError.
     """
 
+    bettermkdir(decrypted)
     if not os.path.exists(encrypted):
         LOGGER.info("The encrypted configs file is not present, nothing to do")
     elif test_empty_config(decrypted):
@@ -338,7 +339,12 @@ def deploy(environment, verbose=False):
         'config.newtroy.vault.cfg',
         'config.newtroy.cfg',
     ]
-    tags = []
+    tags = [
+        'cloud',
+        'common',
+        'vpn',
+        'wireguard',
+    ]
 
     # Arguments for specific environments
     if environment == "production":

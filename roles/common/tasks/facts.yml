@@ -1,6 +1,7 @@
 ---
 - block:
 
+  - name: Generate password for the CA key
     local_action:
       module: shell
         openssl rand -hex 16
@@ -14,6 +15,7 @@
     register: p12_password_generated
     when: p12_password is not defined
     tags: update-users
+
   become: false
 
 - name: Define facts

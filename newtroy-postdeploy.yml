@@ -1,0 +1,12 @@
+- name: Post server deployment tasks
+  hosts: localhost
+  tags: always
+
+  # Include same vars as the upstream algo playbooks do
+  # Pass in any extra vars files on the command line
+  vars_files:
+    - config.cfg
+
+  post_tasks:
+    - name: Save ssh known_hosts
+      shell: ssh-keyscan {{ endpoint }} | sort > configs/{{ endpoint }}/known_hosts

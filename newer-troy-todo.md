@@ -50,16 +50,7 @@ Generates this list, which I've migrated:
 
 ## Other notes
 
-- modify wireguard role to connect to hostname, not IP address
-- originally thought I wouldn't need to change configs/{{ IP_subject_alt_name }} but actually I do b/c I don't want that to change when I redeploy - rip that out and replace it with something that uses a hostname or something
-- actually, more generally, ensure that IP_subject_alt_name is used only for that purpose, and isn't scattered everywhere
-
-UPDATE: ACTUALLY I THINK I DON'T NEED THIS IF I SET `endpoint`!
-
 ## Other other notes
 
-- update readme
-- test with endpoint
 - use vars instead of tags for my custom roles in cloud.yml, mimmicking new algo pattern
-- ssh-keyscan the remote server in a new role, so we don't have to worry about ssh_tunneling
-- ensure test configure still works - i think it might not
+- test wireguard

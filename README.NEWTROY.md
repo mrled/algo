@@ -8,15 +8,13 @@ Make sure to use python2 and set it up as described in `README.md`
 
 To use from PSYOPS, you have to use python2 and set it up more or less the way the README says to set up macOS:
 
-(Note: use a `env.PSYOPS` directory, instead of just `env`, in case I need to use it from the Docker host as well.)
-
     python2 -m ensurepip --user
     python2 -m pip install --user --upgrade virtualenv
-    python2 -m virtualenv env.PSYOPS && source env.PSYOPS/bin/activate && python -m pip install -U pip && python -m pip install -r requirements.txt
+    python2 -m virtualenv env && source env/bin/activate && python -m pip install -U pip && python -m pip install -r requirements.txt
 
-Later, as long as the `env.PSYOPS` directory still exists, you can just do
+Later, as long as the `env` directory still exists, you can just do
 
-    source env.PSYOPS/bin/activate
+    source env/bin/activate
 
 ## Differences from upstream
 
@@ -40,9 +38,7 @@ I will document changes and my user here, and anyone who wants to use this as a 
     the `configs/` dir is automatically encrypted and saved to `configs.tar.gz.gpg` on successful deployment,
     and that encrypted archive is automatically decrypted and extracted to `configs/` before deployment.
 
-### Resolving client hosts with dnsmasq
-
-Added support for dnsmasq to resolve client hosts when `dns_adblocking` is enabled and `newtroy_vpn_internal_domain` is specified.
+### Giving clients unique, persistent IP addresses
 
 There are two components here:
 
@@ -200,8 +196,6 @@ Stuff I have that I could consider PRing:
  -  Allow the `CA_password` to be passed in from the vault
     (see `playbooks/facts/main.yml`).
 
- -  Rename the misspelled `ipec` file(s)
-
 Stuff I want for me that could go upstream:
 
  -  Document exactly the necessary permissions Algo needs to deploy to AWS
@@ -211,11 +205,6 @@ Stuff I want for me that could go upstream:
     Not possible to securely upload it,
     but could reduce attack surface by requiring that a MITM actively intercept the first SSH connection
     and then maintain that active intercept for all subsequent connections
-
- -  Support a domain name for the VPN endpoint.
-    Lots of people ask for this mostly for aesthetic reasons.
-    However, I want it so that I can tear down my infrastructure and redeploy with the same server cert.
-    (See next item.)
 
  -  Support deploying generated PKI to brand new VMs.
     Currently, if you tear down your Algo server,

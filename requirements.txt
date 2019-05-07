@@ -2,8 +2,3 @@ ansible==2.5.2
 
 # newtroy stuff
 netaddr
-
-# required for my route53 stuff
-# TODO: refactor this to work like algo does
-#boto3
-#boto
