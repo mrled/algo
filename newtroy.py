@@ -286,6 +286,7 @@ def predeploy_prep_configs(encrypted, decrypted):
     If they do not, raise a MismatchedConfigsError.
     """
 
+    LOGGER.info("Preparing configs directory for deployment...")
     bettermkdir(decrypted)
     if not os.path.exists(encrypted):
         LOGGER.info("The encrypted configs file is not present, nothing to do")
@@ -342,6 +343,7 @@ def deploy(environment, verbose=False):
     tags = [
         'cloud',
         'common',
+        'dns_encryption',
         'vpn',
         'wireguard',
     ]
@@ -362,6 +364,15 @@ def deploy(environment, verbose=False):
     else:
         raise Exception("Invalid environment name")
 
+    env = os.environ.copy()
+    env['ANSIBLE_LOG_PATH'] = os.path.join(SCRIPTDIR, 'ansible.log')
+    # env['ANSIBLE_DEBUG'] = 'True'
+
+    try:
+        os.rename(env['ANSIBLE_LOG_PATH'], '{}.1'.format(env['ANSIBLE_LOG_PATH']))
+    except OSError:
+        pass
+
     command = ['ansible-playbook', 'main.yml']
     if verbose:
         command += ['-vv']
@@ -369,7 +380,7 @@ def deploy(environment, verbose=False):
     for varsfile in varsfiles:
         command += ['-e', '@{}'.format(varsfile)]
     LOGGER.info("Deploying Algo with command: {}".format(' '.join(command)))
-    subprocess.check_call(command, cwd=SCRIPTDIR)
+    subprocess.check_call(command, cwd=SCRIPTDIR, env=env)
 
 
 def main(*args, **kwargs):  # pylint: disable=W0613
@@ -513,7 +524,7 @@ def main(*args, **kwargs):  # pylint: disable=W0613
                 rm -rf {configs}
 
             To save the existing configs dir to the encrypted configs archive, run:
-                {scriptpath} encrypt --force
+                {scriptpath} config encrypt --force
 
             """.format(
                 configs=parsed.configs_path,
