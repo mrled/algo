@@ -9,8 +9,8 @@
   tasks:
 
     - pause:
-      prompt: |
-        Enter the public IP address or domain name of your server: (IMPORTANT! This is used to verify the certificate)
+        prompt: |
+          Enter the public IP address or domain name of your server: (IMPORTANT! This is used to verify the certificate)
       register: _endpoint
       when: endpoint is undefined
 
