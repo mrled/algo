@@ -47,3 +47,11 @@ Resources:
             - {{ vpn_network_ipv6 | ipaddr(loop.index + newtroy_network_client_offset) | ipaddr('address') }}
 
 {%endfor%}
+
+{% for record in newtroy_vpn_internal_hosted_zone_additional_records %}
+        - Name: {{ record.Name }}
+	  Type: {{ record.Type }}
+          TTL: {{ record.TTL }}
+          ResourceRecords: {{ record.ResourceRecords }}
+
+{% endfor %}
