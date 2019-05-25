@@ -49,9 +49,10 @@ Resources:
 {%endfor%}
 
 {% for record in newtroy_vpn_internal_hosted_zone_additional_records %}
+
         - Name: {{ record.Name }}
-	  Type: {{ record.Type }}
+          Type: {{ record.Type }}
           TTL: {{ record.TTL }}
-          ResourceRecords: {{ record.ResourceRecords }}
+          ResourceRecords: ["{{ record.ResourceRecords | list | join('","') }}"]
 
 {% endfor %}
